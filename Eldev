@@ -1,0 +1,17 @@
+;; -*- mode: emacs-lisp; lexical-binding: t; -*-
+
+(eldev-use-package-archive 'melpa)
+
+;; Build the module before running tests
+(eldev-add-loading-roots ".")
+
+;; Add a custom command to build the module
+(eldev-defcommand indigo-module-build (&rest parameters)
+  "Build the indigo dynamic module"
+  (eldev-call-process "make" parameters))
+
+;; Make sure the module is built before testing
+(add-hook 'eldev-test-hook
+          (lambda ()
+            (unless (file-exists-p "indigo-module.so")
+              (eldev-call-process "make" nil))))

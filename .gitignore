@@ -1,0 +1,40 @@
+# Object files
+*.o
+*.obj
+
+# Build artifacts
+*.d
+
+# Test executables
+test-indigo
+
+# Dynamic modules
+*.so
+*.dll
+*.dylib
+
+# Indigo installation
+indigo-install/
+
+# Eldev
+/.eldev
+/Eldev-local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
