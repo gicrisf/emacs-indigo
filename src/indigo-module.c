@@ -29,6 +29,28 @@
 /* Declare the module is GPL compatible */
 int plugin_is_GPL_compatible;
 
+static void
+mkfn (emacs_env *env,
+      ptrdiff_t nargs_min,
+      ptrdiff_t nargs_max,
+      emacs_value (*func) (emacs_env *env,
+                           ptrdiff_t nargs,
+                           emacs_value* args,
+                           void *data),
+      const char *name,
+      const char *docstring,
+      void *data)
+{
+    /* Make function */
+    emacs_value Sfun = env->make_function
+        (env, nargs_min, nargs_max, func, docstring, data);
+    /* Bind function */
+    emacs_value Qfset = env->intern (env, "fset");
+    emacs_value Qsym = env->intern (env, name);
+    emacs_value args[] = { Qsym, Sfun };
+    env->funcall (env, Qfset, 2, args);
+}
+
 static emacs_value Fmolecular_formula(
     emacs_env *env,
     ptrdiff_t nargs,
@@ -90,30 +112,11 @@ static emacs_value Findigo_version(
 int emacs_module_init( struct emacs_runtime *ert ) {
     emacs_env *env = ert->get_environment(ert);
 
-    /* Create function */
-    emacs_value fun = env->make_function(
-        env,
-        1, 1,
-        Fmolecular_formula,
-        "Get molecular formula from SMILES string",
-        NULL
-        );
+    mkfn(env, 1, 1, Fmolecular_formula, "indigo-molecular-formula",
+         "Get molecular formula from SMILES string", NULL);
 
-    emacs_value Qfset = env->intern(env, "fset");
-
-    emacs_value Qsym = env->intern(env, "indigo-molecular-formula");
-    env->funcall(env, Qfset, 2, (emacs_value[]){Qsym, fun});
-
-    emacs_value fVersion = env->make_function(
-        env,
-        0, 0,
-        Findigo_version,
-        "Get Indigo version",
-        NULL
-        );
-
-    emacs_value QsymVersion = env->intern(env, "indigo-version");
-    env->funcall(env, Qfset, 2, (emacs_value[]){QsymVersion, fVersion});
+    mkfn(env, 0, 0, Findigo_version, "indigo-version",
+         "Get Indigo version", NULL);
 
     emacs_value Qprovide = env->intern(env, "provide");
     emacs_value Qfeat = env->intern(env, "indigo");
