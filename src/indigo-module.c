@@ -109,11 +109,57 @@ static emacs_value Findigo_version(
     return env->make_string(env, version, strlen(version));
 }
 
+static emacs_value Fmolecular_weight(
+    emacs_env *env,
+    ptrdiff_t nargs,
+    emacs_value *args,
+    void *data
+) {
+    (void)nargs; (void)data;
+
+    // Step 1: Find out how long the SMILES string is
+    ptrdiff_t smiles_len = 0;
+    env->copy_string_contents(env, args[0], NULL, &smiles_len);
+    
+    // Step 2: Allocate memory to hold the SMILES string
+    char *smiles = malloc(smiles_len);
+    if (!smiles) {
+        return env->intern(env, "nil");
+    }
+    
+    // Step 3: Actually copy the SMILES string from Emacs to our buffer
+    env->copy_string_contents(env, args[0], smiles, &smiles_len);
+    
+    // Step 4: Ask Indigo to parse the SMILES string into a molecule
+    int mol = indigoLoadMoleculeFromString(smiles);
+    free(smiles);
+    
+    // Step 5: Check if Indigo failed to parse the molecule
+    if (mol == -1) {
+        return env->intern(env, "nil");
+    }
+    
+    // Step 6: Ask Indigo to calculate the molecular weight
+    double weight = indigoMolecularWeight(mol);
+    
+    // Step 7: Convert the C double to an Emacs float
+    emacs_value result = env->make_float(env, weight);
+    
+    // Step 8: Clean up Indigo objects to prevent memory leaks
+    indigoFree(mol);
+    
+    // Step 9: Return the molecular weight to Emacs
+    return result;
+}
+
 int emacs_module_init( struct emacs_runtime *ert ) {
     emacs_env *env = ert->get_environment(ert);
 
     mkfn(env, 1, 1, Fmolecular_formula, "indigo-molecular-formula",
          "Get molecular formula from SMILES string", NULL);
+
+    mkfn(env, 1, 1, Fmolecular_weight, "indigo-molecular-weight",
+         "Get molecular weight from SMILES string", NULL);
 
     mkfn(env, 0, 0, Findigo_version, "indigo-version",
          "Get Indigo version", NULL);

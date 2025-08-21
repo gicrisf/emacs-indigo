@@ -40,6 +40,25 @@
   (should (stringp (indigo-version)))
   (should-not (string-empty-p (indigo-version))))
 
+(ert-deftest test-molecular-weight-ethanol ()
+  "Test molecular weight calculation for ethanol (CCO)."
+  (should (floatp (indigo-molecular-weight "CCO")))
+  (should (< (abs (- (indigo-molecular-weight "CCO") 46.07)) 0.1)))
+
+(ert-deftest test-molecular-weight-methane ()
+  "Test molecular weight calculation for methane (C)."
+  (should (floatp (indigo-molecular-weight "C")))
+  (should (< (abs (- (indigo-molecular-weight "C") 16.04)) 0.1)))
+
+(ert-deftest test-molecular-weight-benzene ()
+  "Test molecular weight calculation for benzene (c1ccccc1)."
+  (should (floatp (indigo-molecular-weight "c1ccccc1")))
+  (should (< (abs (- (indigo-molecular-weight "c1ccccc1") 78.11)) 0.1)))
+
+(ert-deftest test-molecular-weight-invalid-smiles ()
+  "Test molecular weight calculation with invalid SMILES."
+  (should (null (indigo-molecular-weight "invalid"))))
+
 (provide 'test-indigo)
 
 ;;; test-indigo.el ends here
