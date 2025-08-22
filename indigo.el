@@ -32,7 +32,7 @@
 ;; Load the compiled module
 (defun indigo-load-module ()
   "Load the indigo dynamic module."
-  (let ((module-path (expand-file-name "indigo-module.so"
+  (let ((module-path (expand-file-name "build/indigo-module.so"
                                        (file-name-directory
                                         (or load-file-name buffer-file-name)))))
     (when (file-exists-p module-path)
