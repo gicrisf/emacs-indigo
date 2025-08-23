@@ -520,3 +520,19 @@ emacs_value op_indigo_iterate_decompositions(emacs_env *env, int deco_item) {
     }
     return env->make_integer(env, iterator);
 }
+
+/* Normalization functions */
+emacs_value op_indigo_normalize(emacs_env *env, int structure, const char *options) {
+    int result = indigoNormalize(structure, options);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_standardize(emacs_env *env, int item) {
+    int result = indigoStandardize(item);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_ionize(emacs_env *env, int item, float pH, float pH_toll) {
+    int result = indigoIonize(item, pH, pH_toll);
+    return env->make_integer(env, result);
+}

@@ -116,6 +116,9 @@ emacs_value op_indigo_fingerprint(emacs_env *env, int mol, const char *type);
 emacs_value op_indigo_similarity(emacs_env *env, int fp1, int fp2, const char *metrics);
 emacs_value op_indigo_clone(emacs_env *env, int obj);
 emacs_value op_indigo_to_string(emacs_env *env, int handle);
+emacs_value op_indigo_normalize(emacs_env *env, int structure, const char *options);
+emacs_value op_indigo_standardize(emacs_env *env, int item);
+emacs_value op_indigo_ionize(emacs_env *env, int item, float pH, float pH_toll);
 
 /* System operation function declarations */
 emacs_value op_indigo_version(emacs_env *env);
@@ -226,6 +229,9 @@ emacs_value Findigo_fingerprint(emacs_env *env, ptrdiff_t nargs, emacs_value *ar
 emacs_value Findigo_similarity(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_clone(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_to_string(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_normalize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_standardize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_ionize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 /* System Emacs wrapper function declarations */
 emacs_value Findigo_version(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);

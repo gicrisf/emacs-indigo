@@ -578,3 +578,34 @@ emacs_value Findigo_iterate_decompositions(emacs_env *env, ptrdiff_t nargs, emac
     int deco_item = env->extract_integer(env, args[0]);
     return op_indigo_iterate_decompositions(env, deco_item);
 }
+
+/* Normalization functions */
+emacs_value Findigo_normalize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int structure = env->extract_integer(env, args[0]);
+    
+    char *options = NULL;
+    if (nargs > 1 && env->is_not_nil(env, args[1])) {
+        ptrdiff_t size;
+        env->copy_string_contents(env, args[1], NULL, &size);
+        options = malloc(size);
+        env->copy_string_contents(env, args[1], options, &size);
+    } else {
+        options = strdup("");
+    }
+    
+    emacs_value result = op_indigo_normalize(env, structure, options);
+    free(options);
+    return result;
+}
+
+emacs_value Findigo_standardize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    return op_indigo_standardize(env, item);
+}
+
+emacs_value Findigo_ionize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    double pH = env->extract_float(env, args[1]);
+    double pH_toll = env->extract_float(env, args[2]);
+    return op_indigo_ionize(env, item, (float)pH, (float)pH_toll);
+}

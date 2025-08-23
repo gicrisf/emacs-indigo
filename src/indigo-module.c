@@ -226,6 +226,14 @@ int emacs_module_init(struct emacs_runtime *ert) {
 
     mkfn(env, 1, 1, Findigo_to_string, "indigo-to-string",
          "Convert Indigo object to string", NULL);
+    
+    /* Normalization functions */
+    mkfn(env, 1, 2, Findigo_normalize, "indigo-normalize",
+         "Normalize molecule structure (MOLECULE [OPTIONS])", NULL);
+    mkfn(env, 1, 1, Findigo_standardize, "indigo-standardize",
+         "Standardize molecule charges, stereo etc. (MOLECULE)", NULL);
+    mkfn(env, 3, 3, Findigo_ionize, "indigo-ionize",
+         "Ionize molecule at specified pH (MOLECULE PH PH-TOLERANCE)", NULL);
 
     /* System functions */
     mkfn(env, 0, 0, Findigo_alloc_session_id, "indigo-alloc-session-id",

@@ -397,6 +397,106 @@
     (should (integerp result1))
     (should (integerp result2))))
 
+;;; Normalization functions tests
+
+(ert-deftest test-indigo-normalize-basic ()
+  "Test basic molecule normalization."
+  (let ((mol (indigo-load-molecule-from-string "[H]C([H])([H])C([H])([H])O[H]")))  ; ethanol with explicit hydrogens
+    ;; (message "Loaded molecule handle: %s" mol)
+    (unwind-protect
+        (let ((original-smiles (indigo-smiles mol)))
+          ;; (message "Original SMILES: %s" original-smiles)
+          (let ((result (indigo-normalize mol)))
+            ;; (message "Normalize result: %s" result)
+            (when (= result 0)
+              (message "Normalize error: %s" (indigo-get-last-error)))
+            (should (integerp result))
+            (should (> result 0))  ; Expect success
+            ;; Check that normalization worked by converting back to SMILES
+            (let ((normalized-smiles (indigo-smiles mol)))
+              ;; (message "Normalized SMILES: %s" normalized-smiles)
+              (should (stringp normalized-smiles)))))
+      (indigo-free mol))))
+
+(ert-deftest test-indigo-normalize-with-options ()
+  "Test molecule normalization with options."
+  (let ((mol (indigo-load-molecule-from-string "[H]C([H])([H])C([H])([H])O[H]")))
+    (unwind-protect
+        (let ((original-smiles (indigo-smiles mol)))
+          ;; (message "Original SMILES (options test): %s" original-smiles)
+          (let ((result (indigo-normalize mol "")))
+            ;; (message "Normalize with empty options result: %s" result)
+            (when (= result 0)
+              (message "Normalize with options error: %s" (indigo-get-last-error)))
+            (should (integerp result))
+            (should (> result 0))  ; Expect success
+            (let ((normalized-smiles (indigo-smiles mol)))
+              ;; (message "Normalized SMILES (options test): %s" normalized-smiles)
+              (should (stringp normalized-smiles))))
+          )
+      (indigo-free mol))))
+
+(ert-deftest test-indigo-standardize-basic ()
+  "Test basic molecule standardization."
+  (let ((mol (indigo-load-molecule-from-string "[H]N([H])C([H])([H])C(=O)O[H]")))  ; glycine with explicit hydrogens and ionizable groups
+    (unwind-protect
+        (let ((original-smiles (indigo-smiles mol)))
+          ;; (message "Original SMILES (standardize test): %s" original-smiles)
+          (let ((result (indigo-standardize mol)))
+            ;; (message "Standardize result: %s" result)
+            (when (= result 0)
+              (message "Standardize error: %s" (indigo-get-last-error)))
+            (should (integerp result))
+            (should (> result 0))  ; Expect success
+            ;; Check that molecule is still valid after standardization
+            (let ((smiles (indigo-smiles mol)))
+              ;; (message "Standardized SMILES: %s" smiles)
+              (should (stringp smiles)))))
+      (indigo-free mol))))
+
+(ert-deftest test-indigo-ionize-basic ()
+  "Test basic molecule ionization."
+  (let ((mol (indigo-load-molecule-from-string "CC(=O)O")))  ; acetic acid
+    (unwind-protect
+        (let ((original-smiles (indigo-smiles mol)))
+          ;; (message "Original SMILES (ionize test): %s" original-smiles)
+          (let ((result (indigo-ionize mol 7.0 0.1)))  ; pH 7.0 with tolerance 0.1
+            ;; (message "Ionize result (pH 7.0): %s" result)
+            (when (= result 0)
+              (message "Ionize error: %s" (indigo-get-last-error)))
+            (should (integerp result))
+            (should (> result 0))  ; Expect success
+            ;; Check that molecule is still valid after ionization
+            (let ((smiles (indigo-smiles mol)))
+              ;; (message "Ionized SMILES (pH 7.0): %s" smiles)
+              (should (stringp smiles)))))
+      (indigo-free mol))))
+
+(ert-deftest test-indigo-ionize-different-ph ()
+  "Test molecule ionization at different pH values."
+  (let ((mol1 (indigo-load-molecule-from-string "CC(=O)O"))   ; acetic acid
+        (mol2 (indigo-load-molecule-from-string "CC(=O)O")))
+    (unwind-protect
+        (progn
+          ;; Test at acidic pH
+          (let ((result1 (indigo-ionize mol1 3.0 0.1)))
+            (should (integerp result1)))
+          ;; Test at basic pH
+          (let ((result2 (indigo-ionize mol2 10.0 0.1)))
+            (should (integerp result2))))
+      (indigo-free mol1)
+      (indigo-free mol2))))
+
+(ert-deftest test-normalization-error-handling ()
+  "Test error handling with invalid molecule handles."
+  ;; Test with invalid handle (should not crash)
+  (let ((result1 (indigo-normalize -1))
+        (result2 (indigo-standardize -1))
+        (result3 (indigo-ionize -1 7.0 0.1)))
+    (should (integerp result1))
+    (should (integerp result2))  
+    (should (integerp result3))))
+
 (provide 'test-indigo-stateful)
 
 ;;; test-indigo-stateful.el ends here
