@@ -210,6 +210,12 @@ emacs_value op_indigo_to_string(emacs_env *env, int handle) {
     return env->make_string(env, str, strlen(str));
 }
 
+emacs_value op_indigo_symbol(emacs_env *env, int atom) {
+    const char* symbol = indigoSymbol(atom);
+    if (!symbol) return env->intern(env, "nil");
+    return env->make_string(env, symbol, strlen(symbol));
+}
+
 /* System functions */
 emacs_value op_indigo_version(emacs_env *env) {
     const char* version = indigoVersion();

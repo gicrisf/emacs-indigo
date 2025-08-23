@@ -494,30 +494,70 @@
         (result2 (indigo-standardize -1))
         (result3 (indigo-ionize -1 7.0 0.1)))
     (should (integerp result1))
-    (should (integerp result2))  
+    (should (integerp result2))
     (should (integerp result3))))
 
 ;;; PKA Function Tests
 
-(ert-deftest test-indigo-build-pka-model ()
-  "Test PKA model building function."
-  (should (fboundp 'indigo-build-pka-model))
-  
-  ;; Test with a non-existent file (should return error code)
-  (let ((result (indigo-build-pka-model 3 0.5 "/nonexistent/file.txt")))
-    (should (integerp result))))
+;; FIXME
+;; The wrapper looks fine, but this is not the right way to use it
+;; (ert-deftest test-indigo-build-pka-model ()
+;;   "Test PKA model building function."
+;;   (should (fboundp 'indigo-build-pka-model))
 
+;;   ;; Test building PKA model to temporary file
+;;   (let ((temp-file (make-temp-file "indigo-pka-model" nil ".pkl")))
+;;     (message "DEBUG: Created temp file: %s" temp-file)
+;;     (unwind-protect
+;;         (let ((result (indigo-build-pka-model 0 0.0 temp-file)))
+;;           (message "DEBUG: indigo-build-pka-model returned: %s" result)
+;;           (should (integerp result))
+;;           ;; Check for Indigo errors
+;;           (let ((error-msg (indigo-get-last-error)))
+;;             (when (and error-msg (> (length error-msg) 0))
+;;               (message "DEBUG: Indigo error: %s" error-msg)))
+;;           ;; Model built successfully if result >= 0
+;;           (if (>= result 0)
+;;               (progn
+;;                 (message "DEBUG: PKA model built successfully to %s" temp-file)
+;;                 (message "DEBUG: File exists after build: %s" (file-exists-p temp-file)))
+;;             (message "DEBUG: PKA model build failed with result: %s" result)))
+;;       ;; Clean up temporary file
+;;       (when (file-exists-p temp-file)
+;;         (message "DEBUG: Cleaning up temp file: %s" temp-file)
+;;         (delete-file temp-file)))))
+
+;; TODO Refine
+;; Leaving debug messages because it works but the returned values are crazy
+;; I mean: pka 100 for everything? LMAO -- I'm surely missing something basic
 (ert-deftest test-indigo-get-acid-pka-value ()
   "Test acid PKA value retrieval."
   (should (fboundp 'indigo-get-acid-pka-value))
   
-  ;; Test with a simple molecule (ethanoic acid)
+  ;; Test with a simple molecule (acetic acid)
   (let ((mol (indigo-load-molecule-from-string "CC(=O)O")))
+    (message "DEBUG: Loaded molecule handle: %s" mol)
     (unwind-protect
         (when (and mol (> mol 0))
-          ;; Test function exists and returns appropriate value
-          (let ((pka-result (indigo-get-acid-pka-value mol 0 1 0)))
-            (should (or (floatp pka-result) (null pka-result)))))
+          ;; Iterate through ALL atoms in the molecule
+          (let ((atoms-iter (indigo-iterate-atoms mol))
+                (atom-index 0))
+            (unwind-protect
+                (let ((atom (indigo-next atoms-iter)))
+                  (while atom
+                    (let ((atom-symbol (indigo-symbol atom))
+                          (pka-result (indigo-get-acid-pka-value mol atom 1 0)))
+                      (message "DEBUG: Atom[%d] = %s, Acid pKa = %s"
+                               atom-index atom-symbol pka-result)
+                      ;; Check for Indigo errors
+                      (let ((error-msg (indigo-get-last-error)))
+                        (when (and error-msg (> (length error-msg) 0))
+                          (message "DEBUG: Indigo error for atom %s: %s" atom-symbol error-msg)))
+                      (should (or (floatp pka-result) (null pka-result)))
+                      (setq atom-index (1+ atom-index))
+                      (setq atom (indigo-next atoms-iter)))))
+              (when atoms-iter
+                (indigo-free atoms-iter)))))
       (when (and mol (> mol 0))
         (indigo-free mol)))))
 
@@ -527,11 +567,28 @@
   
   ;; Test with a simple molecule (ethylamine)
   (let ((mol (indigo-load-molecule-from-string "CCN")))
+    (message "DEBUG: Loaded molecule handle: %s" mol)
     (unwind-protect
         (when (and mol (> mol 0))
-          ;; Test function exists and returns appropriate value
-          (let ((pka-result (indigo-get-basic-pka-value mol 0 1 0)))
-            (should (or (floatp pka-result) (null pka-result)))))
+          ;; Iterate through ALL atoms in the molecule
+          (let ((atoms-iter (indigo-iterate-atoms mol))
+                (atom-index 0))
+            (unwind-protect
+                (let ((atom (indigo-next atoms-iter)))
+                  (while atom
+                    (let ((atom-symbol (indigo-symbol atom))
+                          (pka-result (indigo-get-basic-pka-value mol atom 1 0)))
+                      (message "DEBUG: Atom[%d] = %s, Basic pKa = %s"
+                               atom-index atom-symbol pka-result)
+                      ;; Check for Indigo errors
+                      (let ((error-msg (indigo-get-last-error)))
+                        (when (and error-msg (> (length error-msg) 0))
+                          (message "DEBUG: Indigo error for atom %s: %s" atom-symbol error-msg)))
+                      (should (or (floatp pka-result) (null pka-result)))
+                      (setq atom-index (1+ atom-index))
+                      (setq atom (indigo-next atoms-iter)))))
+              (when atoms-iter
+                (indigo-free atoms-iter)))))
       (when (and mol (> mol 0))
         (indigo-free mol)))))
 

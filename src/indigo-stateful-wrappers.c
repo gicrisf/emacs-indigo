@@ -292,6 +292,11 @@ emacs_value Findigo_to_string(emacs_env *env, ptrdiff_t nargs, emacs_value *args
     return op_indigo_to_string(env, handle);
 }
 
+emacs_value Findigo_symbol(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int atom = env->extract_integer(env, args[0]);
+    return op_indigo_symbol(env, atom);
+}
+
 /* System functions */
 emacs_value Findigo_version(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
     return op_indigo_version(env);

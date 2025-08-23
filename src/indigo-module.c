@@ -232,6 +232,9 @@ int emacs_module_init(struct emacs_runtime *ert) {
 
     mkfn(env, 1, 1, Findigo_to_string, "indigo-to-string",
          "Convert Indigo object to string", NULL);
+
+    mkfn(env, 1, 1, Findigo_symbol, "indigo-symbol",
+         "Get atom symbol", NULL);
     
     /* Normalization functions */
     mkfn(env, 1, 2, Findigo_normalize, "indigo-normalize",
