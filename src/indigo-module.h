@@ -134,6 +134,39 @@ emacs_value op_indigo_set_option_float(emacs_env *env, const char *name, float v
 emacs_value op_indigo_set_option_color(emacs_env *env, const char *name, float r, float g, float b);
 emacs_value op_indigo_set_option_xy(emacs_env *env, const char *name, int x, int y);
 
+/* Iterator operation function declarations */
+emacs_value op_indigo_next(emacs_env *env, int iterator);
+emacs_value op_indigo_iterate_atoms(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_bonds(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_neighbors(emacs_env *env, int atom);
+emacs_value op_indigo_iterate_components(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_sssr(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_subtrees(emacs_env *env, int molecule, int min_atoms, int max_atoms);
+emacs_value op_indigo_iterate_rings(emacs_env *env, int molecule, int min_atoms, int max_atoms);
+emacs_value op_indigo_iterate_edge_submolecules(emacs_env *env, int molecule, int min_bonds, int max_bonds);
+emacs_value op_indigo_iterate_pseudoatoms(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_rsites(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_stereocenters(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_allene_centers(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_rgroups(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_rgroup_fragments(emacs_env *env, int rgroup);
+emacs_value op_indigo_iterate_attachment_points(emacs_env *env, int item, int order);
+emacs_value op_indigo_iterate_data_sgroups(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_superatoms(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_generic_sgroups(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_repeating_units(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_multiple_groups(emacs_env *env, int molecule);
+emacs_value op_indigo_iterate_properties(emacs_env *env, int handle);
+emacs_value op_indigo_iterate_reactants(emacs_env *env, int reaction);
+emacs_value op_indigo_iterate_products(emacs_env *env, int reaction);
+emacs_value op_indigo_iterate_catalysts(emacs_env *env, int reaction);
+emacs_value op_indigo_iterate_molecules(emacs_env *env, int reaction);
+emacs_value op_indigo_iterate_array(emacs_env *env, int array);
+emacs_value op_indigo_iterate_matches(emacs_env *env, int matcher, int query);
+emacs_value op_indigo_iterate_tautomers(emacs_env *env, int molecule, const char *options);
+emacs_value op_indigo_iterate_decomposed_molecules(emacs_env *env, int decomp);
+emacs_value op_indigo_iterate_decompositions(emacs_env *env, int deco_item);
+
 /* Stateless Emacs wrapper function declarations */
 emacs_value Fdo_molecular_formula(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_molecular_weight(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
@@ -210,5 +243,38 @@ emacs_value Findigo_set_option_bool(emacs_env *env, ptrdiff_t nargs, emacs_value
 emacs_value Findigo_set_option_float(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_set_option_color(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_set_option_xy(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+
+/* Iterator Emacs wrapper function declarations */
+emacs_value Findigo_next(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_atoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_bonds(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_neighbors(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_components(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_sssr(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_subtrees(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_rings(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_edge_submolecules(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_pseudoatoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_rsites(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_stereocenters(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_allene_centers(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_rgroups(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_rgroup_fragments(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_attachment_points(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_data_sgroups(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_superatoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_generic_sgroups(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_repeating_units(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_multiple_groups(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_properties(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_reactants(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_products(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_catalysts(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_molecules(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_array(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_matches(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_tautomers(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_decomposed_molecules(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_iterate_decompositions(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 #endif /* INDIGO_MODULE_H */

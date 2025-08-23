@@ -265,6 +265,100 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 3, 3, Findigo_set_option_xy, "indigo-set-option-xy",
          "Set an Indigo option with X,Y coordinate values", NULL);
 
+    /* Iterator functions */
+    mkfn(env, 1, 1, Findigo_next, "indigo-next",
+         "Get the next item from an iterator", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_atoms, "indigo-iterate-atoms",
+         "Create an iterator over atoms in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_bonds, "indigo-iterate-bonds",
+         "Create an iterator over bonds in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_neighbors, "indigo-iterate-neighbors",
+         "Create an iterator over neighbors of an atom", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_components, "indigo-iterate-components",
+         "Create an iterator over connected components in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_sssr, "indigo-iterate-sssr",
+         "Create an iterator over SSSR rings in a molecule", NULL);
+
+    mkfn(env, 3, 3, Findigo_iterate_subtrees, "indigo-iterate-subtrees",
+         "Create an iterator over subtrees in a molecule with atom count range", NULL);
+
+    mkfn(env, 3, 3, Findigo_iterate_rings, "indigo-iterate-rings",
+         "Create an iterator over rings in a molecule with atom count range", NULL);
+
+    mkfn(env, 3, 3, Findigo_iterate_edge_submolecules, "indigo-iterate-edge-submolecules",
+         "Create an iterator over edge submolecules with bond count range", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_pseudoatoms, "indigo-iterate-pseudoatoms",
+         "Create an iterator over pseudoatoms in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_rsites, "indigo-iterate-rsites",
+         "Create an iterator over R-sites in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_stereocenters, "indigo-iterate-stereocenters",
+         "Create an iterator over stereocenters in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_allene_centers, "indigo-iterate-allene-centers",
+         "Create an iterator over allene centers in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_rgroups, "indigo-iterate-rgroups",
+         "Create an iterator over R-groups in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_rgroup_fragments, "indigo-iterate-rgroup-fragments",
+         "Create an iterator over fragments in an R-group", NULL);
+
+    mkfn(env, 2, 2, Findigo_iterate_attachment_points, "indigo-iterate-attachment-points",
+         "Create an iterator over attachment points of an item", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_data_sgroups, "indigo-iterate-data-sgroups",
+         "Create an iterator over data S-groups in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_superatoms, "indigo-iterate-superatoms",
+         "Create an iterator over superatoms in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_generic_sgroups, "indigo-iterate-generic-sgroups",
+         "Create an iterator over generic S-groups in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_repeating_units, "indigo-iterate-repeating-units",
+         "Create an iterator over repeating units in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_multiple_groups, "indigo-iterate-multiple-groups",
+         "Create an iterator over multiple groups in a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_properties, "indigo-iterate-properties",
+         "Create an iterator over properties of an object", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_reactants, "indigo-iterate-reactants",
+         "Create an iterator over reactants in a reaction", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_products, "indigo-iterate-products",
+         "Create an iterator over products in a reaction", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_catalysts, "indigo-iterate-catalysts",
+         "Create an iterator over catalysts in a reaction", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_molecules, "indigo-iterate-molecules",
+         "Create an iterator over all molecules in a reaction", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_array, "indigo-iterate-array",
+         "Create an iterator over elements in an array", NULL);
+
+    mkfn(env, 2, 2, Findigo_iterate_matches, "indigo-iterate-matches",
+         "Create an iterator over substructure matches", NULL);
+
+    mkfn(env, 2, 2, Findigo_iterate_tautomers, "indigo-iterate-tautomers",
+         "Create an iterator over tautomers of a molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_decomposed_molecules, "indigo-iterate-decomposed-molecules",
+         "Create an iterator over decomposed molecules", NULL);
+
+    mkfn(env, 1, 1, Findigo_iterate_decompositions, "indigo-iterate-decompositions",
+         "Create an iterator over decompositions", NULL);
+
     emacs_value Qprovide = env->intern(env, "provide");
     emacs_value Qfeat = env->intern(env, "indigo");
     env->funcall(env, Qprovide, 1, &Qfeat);
