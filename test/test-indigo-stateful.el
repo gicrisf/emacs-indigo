@@ -497,6 +497,232 @@
     (should (integerp result2))  
     (should (integerp result3))))
 
+;;; PKA Function Tests
+
+(ert-deftest test-indigo-build-pka-model ()
+  "Test PKA model building function."
+  (should (fboundp 'indigo-build-pka-model))
+  
+  ;; Test with a non-existent file (should return error code)
+  (let ((result (indigo-build-pka-model 3 0.5 "/nonexistent/file.txt")))
+    (should (integerp result))))
+
+(ert-deftest test-indigo-get-acid-pka-value ()
+  "Test acid PKA value retrieval."
+  (should (fboundp 'indigo-get-acid-pka-value))
+  
+  ;; Test with a simple molecule (ethanoic acid)
+  (let ((mol (indigo-load-molecule-from-string "CC(=O)O")))
+    (unwind-protect
+        (when (and mol (> mol 0))
+          ;; Test function exists and returns appropriate value
+          (let ((pka-result (indigo-get-acid-pka-value mol 0 1 0)))
+            (should (or (floatp pka-result) (null pka-result)))))
+      (when (and mol (> mol 0))
+        (indigo-free mol)))))
+
+(ert-deftest test-indigo-get-basic-pka-value ()
+  "Test basic PKA value retrieval."
+  (should (fboundp 'indigo-get-basic-pka-value))
+  
+  ;; Test with a simple molecule (ethylamine)
+  (let ((mol (indigo-load-molecule-from-string "CCN")))
+    (unwind-protect
+        (when (and mol (> mol 0))
+          ;; Test function exists and returns appropriate value
+          (let ((pka-result (indigo-get-basic-pka-value mol 0 1 0)))
+            (should (or (floatp pka-result) (null pka-result)))))
+      (when (and mol (> mol 0))
+        (indigo-free mol)))))
+
+;;; Reaction Mapping Function Tests
+
+(ert-deftest test-indigo-automap ()
+  "Test automatic reaction mapping."
+  (should (fboundp 'indigo-automap))
+  
+  ;; Test with a simple reaction (esterification)
+  (let ((rxn-smiles "CC(=O)O.CCO>>CC(=O)OCC.O"))
+    ;; (message "DEBUG: Loading reaction: %s" rxn-smiles)
+    (let ((rxn (indigo-load-reaction-from-string rxn-smiles)))
+      ;; (message "DEBUG: Reaction handle: %s" rxn)
+      (unwind-protect
+          (when (and rxn (> rxn 0))
+            ;; (message "DEBUG: Starting automap tests")
+            ;; Test different mapping modes
+            (let ((result1 (indigo-automap rxn "discard")))
+              ;; (message "DEBUG: automap discard result: %s" result1)
+              (should (integerp result1)))
+            (let ((result2 (indigo-automap rxn "keep")))
+              ;; (message "DEBUG: automap keep result: %s" result2)
+              (should (integerp result2)))
+            (let ((result3 (indigo-automap rxn "alter")))
+              ;; (message "DEBUG: automap alter result: %s" result3)
+              (should (integerp result3)))
+            (let ((result4 (indigo-automap rxn "clear")))
+              ;; (message "DEBUG: automap clear result: %s" result4)
+              (should (integerp result4)))
+              
+            ;; Test with additional options
+            (let ((result5 (indigo-automap rxn "discard ignore_charges")))
+              ;; (message "DEBUG: automap with options result: %s" result5)
+              (should (integerp result5))))
+        (when (and rxn (> rxn 0))
+          ;; (message "DEBUG: Freeing reaction handle")
+          (indigo-free rxn))))))
+
+(ert-deftest test-indigo-atom-mapping-numbers ()
+  "Test atom mapping number getters and setters."
+  (should (fboundp 'indigo-get-atom-mapping-number))
+  (should (fboundp 'indigo-set-atom-mapping-number))
+  
+  ;; Test with a simple reaction
+  (let ((rxn-smiles "C.C>>CC"))
+    ;; (message "DEBUG: Loading reaction for mapping test: %s" rxn-smiles)
+    (let ((rxn (indigo-load-reaction-from-string rxn-smiles)))
+      ;; (message "DEBUG: Reaction handle for mapping: %s" rxn)
+      (unwind-protect
+          (when (and rxn (> rxn 0))
+            ;; Get reaction atoms iterator
+            ;; (message "DEBUG: Getting reactants iterator")
+            (let ((reactants-iter (indigo-iterate-reactants rxn)))
+              ;; (message "DEBUG: Reactants iterator: %s" reactants-iter)
+              (unwind-protect
+                  (let ((reactant1 (indigo-next reactants-iter)))
+                    ;; (message "DEBUG: First reactant: %s" reactant1)
+                    (when reactant1
+                      (let ((atoms-iter (indigo-iterate-atoms reactant1)))
+                        ;; (message "DEBUG: Atoms iterator: %s" atoms-iter)
+                        (unwind-protect
+                            (let ((atom1 (indigo-next atoms-iter)))
+                              ;; (message "DEBUG: First atom: %s" atom1)
+                              (when atom1
+                                ;; Test setting and getting mapping number
+                                ;; (message "DEBUG: Setting atom mapping number")
+                                (let ((set-result (indigo-set-atom-mapping-number rxn atom1 1)))
+                                  ;; (message "DEBUG: Set mapping result: %s" set-result)
+                                  (should (integerp set-result))
+                                  
+                                  ;; (message "DEBUG: Getting atom mapping number")
+                                  (let ((mapping-num (indigo-get-atom-mapping-number rxn atom1)))
+                                    ;; (message "DEBUG: Mapping number: %s" mapping-num)
+                                    (should (integerp mapping-num))))))
+                          (indigo-free atoms-iter)))))
+                (indigo-free reactants-iter))))
+        (when (and rxn (> rxn 0))
+          (indigo-free rxn))))))
+
+(ert-deftest test-indigo-clear-aam ()
+  "Test clearing atom-to-atom mapping."
+  (should (fboundp 'indigo-clear-aam))
+  
+  (let ((rxn-smiles "C.C>>CC"))
+    ;; (message "DEBUG: Loading reaction for clear AAM test: %s" rxn-smiles)
+    (let ((rxn (indigo-load-reaction-from-string rxn-smiles)))
+      ;; (message "DEBUG: Reaction handle for clear AAM: %s" rxn)
+      (unwind-protect
+          (when (and rxn (> rxn 0))
+            ;; First map the reaction
+            ;; (message "DEBUG: Auto-mapping reaction")
+            (let ((map-result (indigo-automap rxn "discard")))
+              ;; (message "DEBUG: Automap result: %s" map-result)
+              )
+            
+            ;; Then clear the mapping
+            ;; (message "DEBUG: Clearing AAM")
+            (let ((result (indigo-clear-aam rxn)))
+              ;; (message "DEBUG: Clear AAM result: %s" result)
+              (should (integerp result))))
+        (when (and rxn (> rxn 0))
+          (indigo-free rxn))))))
+
+(ert-deftest test-indigo-correct-reacting-centers ()
+  "Test correcting reacting centers based on mapping."
+  (should (fboundp 'indigo-correct-reacting-centers))
+  
+  (let ((rxn-smiles "C.C>>CC"))
+    ;; (message "DEBUG: Loading reaction for correct reacting centers test: %s" rxn-smiles)
+    (let ((rxn (indigo-load-reaction-from-string rxn-smiles)))
+      ;; (message "DEBUG: Reaction handle for correct reacting centers: %s" rxn)
+      (unwind-protect
+          (when (and rxn (> rxn 0))
+            ;; First map the reaction
+            ;; (message "DEBUG: Auto-mapping reaction before correcting centers")
+            (let ((map-result (indigo-automap rxn "discard")))
+              ;; (message "DEBUG: Automap result before correct: %s" map-result)
+              )
+            
+            ;; Then correct reacting centers
+            ;; (message "DEBUG: Correcting reacting centers")
+            (let ((result (indigo-correct-reacting-centers rxn)))
+              ;; (message "DEBUG: Correct reacting centers result: %s" result)
+              (should (integerp result))))
+        (when (and rxn (> rxn 0))
+          (indigo-free rxn))))))
+
+;;; Reacting Center Function Tests
+
+(ert-deftest test-indigo-reacting-center-operations ()
+  "Test reacting center getters and setters."
+  (should (fboundp 'indigo-get-reacting-center))
+  (should (fboundp 'indigo-set-reacting-center))
+  
+  ;; Test with a simple reaction that has bonds
+  (let ((rxn-smiles "CC.CC>>CCCC"))
+    ;; (message "DEBUG: Loading reaction for reacting center test: %s" rxn-smiles)
+    (let ((rxn (indigo-load-reaction-from-string rxn-smiles)))
+      ;; (message "DEBUG: Reaction handle for reacting center: %s" rxn)
+      (unwind-protect
+          (when (and rxn (> rxn 0))
+            ;; Get reaction molecules iterator
+            ;; (message "DEBUG: Getting molecules iterator")
+            (let ((molecules-iter (indigo-iterate-molecules rxn)))
+              ;; (message "DEBUG: Molecules iterator: %s" molecules-iter)
+              (unwind-protect
+                  (let ((mol1 (indigo-next molecules-iter)))
+                    ;; (message "DEBUG: First molecule: %s" mol1)
+                    (when mol1
+                      (let ((bonds-iter (indigo-iterate-bonds mol1)))
+                        ;; (message "DEBUG: Bonds iterator: %s" bonds-iter)
+                        (unwind-protect
+                            (let ((bond1 (indigo-next bonds-iter)))
+                              ;; (message "DEBUG: First bond: %s" bond1)
+                              (when bond1
+                                ;; Test setting reacting center
+                                ;; (message "DEBUG: Setting reacting center")
+                                (let ((set-result (indigo-set-reacting-center rxn bond1 1)))
+                                  ;; (message "DEBUG: Set reacting center result: %s" set-result)
+                                  (should (integerp set-result))
+                                  
+                                  ;; Test getting reacting center
+                                  ;; (message "DEBUG: Getting reacting center")
+                                  (let ((rc-value (indigo-get-reacting-center rxn bond1)))
+                                    ;; (message "DEBUG: Reacting center value: %s" rc-value)
+                                    (should (or (integerp rc-value) (null rc-value)))))))
+                          (indigo-free bonds-iter)))))
+                (indigo-free molecules-iter))))
+        (when (and rxn (> rxn 0))
+          (indigo-free rxn))))))
+
+;;; Advanced Error Handling Tests
+
+(ert-deftest test-indigo-advanced-error-handling ()
+  "Test error handling for advanced functions."
+  ;; Test PKA functions with invalid handles
+  (should (null (indigo-get-acid-pka-value -1 0 1 0)))
+  (should (null (indigo-get-basic-pka-value -1 0 1 0)))
+  
+  ;; Test mapping functions with invalid handles
+  (should (integerp (indigo-automap -1 "discard")))  ; Should return error code
+  (should (integerp (indigo-get-atom-mapping-number -1 -1)))
+  (should (integerp (indigo-set-atom-mapping-number -1 -1 1)))
+  (should (integerp (indigo-clear-aam -1)))
+  (should (integerp (indigo-correct-reacting-centers -1)))
+  
+  ;; Test reacting center functions with invalid handles
+  (should (null (indigo-get-reacting-center -1 -1)))
+  (should (integerp (indigo-set-reacting-center -1 -1 1))))
+
 (provide 'test-indigo-stateful)
 
 ;;; test-indigo-stateful.el ends here

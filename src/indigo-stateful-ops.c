@@ -79,6 +79,16 @@ emacs_value op_indigo_load_smarts_from_file(emacs_env *env, const char *filename
     return env->make_integer(env, mol);
 }
 
+emacs_value op_indigo_load_reaction_from_string(emacs_env *env, const char *string) {
+    int rxn = indigoLoadReactionFromString(string);
+    return env->make_integer(env, rxn);
+}
+
+emacs_value op_indigo_load_reaction_from_file(emacs_env *env, const char *filename) {
+    int rxn = indigoLoadReactionFromFile(filename);
+    return env->make_integer(env, rxn);
+}
+
 /* emacs_value op_indigo_load_smarts_from_buffer(emacs_env *env, const char *buffer, int size) {
     int mol = indigoLoadSmartsFromBuffer(buffer, size);
     return env->make_integer(env, mol);
@@ -534,5 +544,68 @@ emacs_value op_indigo_standardize(emacs_env *env, int item) {
 
 emacs_value op_indigo_ionize(emacs_env *env, int item, float pH, float pH_toll) {
     int result = indigoIonize(item, pH, pH_toll);
+    return env->make_integer(env, result);
+}
+
+/* PKA functions */
+emacs_value op_indigo_build_pka_model(emacs_env *env, int max_level, float threshold, const char *filename) {
+    int result = indigoBuildPkaModel(max_level, threshold, filename);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_get_acid_pka_value(emacs_env *env, int item, int atom, int level, int min_level) {
+    float *pka_value = indigoGetAcidPkaValue(item, atom, level, min_level);
+    if (pka_value == NULL) {
+        return env->intern(env, "nil");
+    }
+    return env->make_float(env, *pka_value);
+}
+
+emacs_value op_indigo_get_basic_pka_value(emacs_env *env, int item, int atom, int level, int min_level) {
+    float *pka_value = indigoGetBasicPkaValue(item, atom, level, min_level);
+    if (pka_value == NULL) {
+        return env->intern(env, "nil");
+    }
+    return env->make_float(env, *pka_value);
+}
+
+/* Reaction mapping functions */
+emacs_value op_indigo_automap(emacs_env *env, int reaction, const char *mode) {
+    int result = indigoAutomap(reaction, mode);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_get_atom_mapping_number(emacs_env *env, int reaction, int reaction_atom) {
+    int mapping_number = indigoGetAtomMappingNumber(reaction, reaction_atom);
+    return env->make_integer(env, mapping_number);
+}
+
+emacs_value op_indigo_set_atom_mapping_number(emacs_env *env, int reaction, int reaction_atom, int number) {
+    int result = indigoSetAtomMappingNumber(reaction, reaction_atom, number);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_clear_aam(emacs_env *env, int reaction) {
+    int result = indigoClearAAM(reaction);
+    return env->make_integer(env, result);
+}
+
+emacs_value op_indigo_correct_reacting_centers(emacs_env *env, int reaction) {
+    int result = indigoCorrectReactingCenters(reaction);
+    return env->make_integer(env, result);
+}
+
+/* Reacting center functions */
+emacs_value op_indigo_get_reacting_center(emacs_env *env, int reaction, int reaction_bond) {
+    int rc;
+    int result = indigoGetReactingCenter(reaction, reaction_bond, &rc);
+    if (result == 1) {
+        return env->make_integer(env, rc);
+    }
+    return env->intern(env, "nil");
+}
+
+emacs_value op_indigo_set_reacting_center(emacs_env *env, int reaction, int reaction_bond, int rc) {
+    int result = indigoSetReactingCenter(reaction, reaction_bond, rc);
     return env->make_integer(env, result);
 }

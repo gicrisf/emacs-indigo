@@ -96,6 +96,8 @@ emacs_value op_indigo_load_query_molecule_from_file(emacs_env *env, const char *
 emacs_value op_indigo_load_smarts_from_string(emacs_env *env, const char *string);
 emacs_value op_indigo_load_smarts_from_file(emacs_env *env, const char *filename);
 /* emacs_value op_indigo_load_smarts_from_buffer(emacs_env *env, const char *buffer, int size); */
+emacs_value op_indigo_load_reaction_from_string(emacs_env *env, const char *string);
+emacs_value op_indigo_load_reaction_from_file(emacs_env *env, const char *filename);
 emacs_value op_indigo_save_molfile_to_file(emacs_env *env, int molecule, const char *filename);
 emacs_value op_indigo_canonical_smiles(emacs_env *env, int mol);
 emacs_value op_indigo_smiles(emacs_env *env, int mol);
@@ -170,6 +172,22 @@ emacs_value op_indigo_iterate_tautomers(emacs_env *env, int molecule, const char
 emacs_value op_indigo_iterate_decomposed_molecules(emacs_env *env, int decomp);
 emacs_value op_indigo_iterate_decompositions(emacs_env *env, int deco_item);
 
+/* PKA operation function declarations */
+emacs_value op_indigo_build_pka_model(emacs_env *env, int max_level, float threshold, const char *filename);
+emacs_value op_indigo_get_acid_pka_value(emacs_env *env, int item, int atom, int level, int min_level);
+emacs_value op_indigo_get_basic_pka_value(emacs_env *env, int item, int atom, int level, int min_level);
+
+/* Reaction mapping operation function declarations */
+emacs_value op_indigo_automap(emacs_env *env, int reaction, const char *mode);
+emacs_value op_indigo_get_atom_mapping_number(emacs_env *env, int reaction, int reaction_atom);
+emacs_value op_indigo_set_atom_mapping_number(emacs_env *env, int reaction, int reaction_atom, int number);
+emacs_value op_indigo_clear_aam(emacs_env *env, int reaction);
+emacs_value op_indigo_correct_reacting_centers(emacs_env *env, int reaction);
+
+/* Reacting center operation function declarations */
+emacs_value op_indigo_get_reacting_center(emacs_env *env, int reaction, int reaction_bond);
+emacs_value op_indigo_set_reacting_center(emacs_env *env, int reaction, int reaction_bond, int rc);
+
 /* Stateless Emacs wrapper function declarations */
 emacs_value Fdo_molecular_formula(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_molecular_weight(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
@@ -209,6 +227,8 @@ emacs_value Findigo_load_query_molecule_from_file(emacs_env *env, ptrdiff_t narg
 emacs_value Findigo_load_smarts_from_string(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_load_smarts_from_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 /* emacs_value Findigo_load_smarts_from_buffer(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data); */
+emacs_value Findigo_load_reaction_from_string(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_load_reaction_from_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_save_molfile_to_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_canonical_smiles(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_smiles(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
@@ -282,5 +302,21 @@ emacs_value Findigo_iterate_matches(emacs_env *env, ptrdiff_t nargs, emacs_value
 emacs_value Findigo_iterate_tautomers(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_iterate_decomposed_molecules(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_iterate_decompositions(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+
+/* PKA Emacs wrapper function declarations */
+emacs_value Findigo_build_pka_model(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_get_acid_pka_value(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_get_basic_pka_value(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+
+/* Reaction mapping Emacs wrapper function declarations */
+emacs_value Findigo_automap(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_get_atom_mapping_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_set_atom_mapping_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_clear_aam(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_correct_reacting_centers(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+
+/* Reacting center Emacs wrapper function declarations */
+emacs_value Findigo_get_reacting_center(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_set_reacting_center(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 #endif /* INDIGO_MODULE_H */

@@ -166,6 +166,12 @@ int emacs_module_init(struct emacs_runtime *ert) {
     /* mkfn(env, 1, 1, Findigo_load_smarts_from_buffer, "indigo-load-smarts-from-buffer",
          "Load SMARTS from buffer and return handle", NULL); */
 
+    mkfn(env, 1, 1, Findigo_load_reaction_from_string, "indigo-load-reaction-from-string",
+         "Load reaction from string and return handle", NULL);
+
+    mkfn(env, 1, 1, Findigo_load_reaction_from_file, "indigo-load-reaction-from-file",
+         "Load reaction from file and return handle", NULL);
+
     /* File saving */
     mkfn(env, 2, 2, Findigo_save_molfile_to_file, "indigo-save-molfile-to-file",
          "Save molecule to file in MOL format", NULL);
@@ -366,6 +372,39 @@ int emacs_module_init(struct emacs_runtime *ert) {
 
     mkfn(env, 1, 1, Findigo_iterate_decompositions, "indigo-iterate-decompositions",
          "Create an iterator over decompositions", NULL);
+
+    /* PKA functions */
+    mkfn(env, 3, 3, Findigo_build_pka_model, "indigo-build-pka-model",
+         "Build PKA model with max level, threshold, and filename", NULL);
+
+    mkfn(env, 4, 4, Findigo_get_acid_pka_value, "indigo-get-acid-pka-value",
+         "Get acid PKA value for atom at specified level", NULL);
+
+    mkfn(env, 4, 4, Findigo_get_basic_pka_value, "indigo-get-basic-pka-value",
+         "Get basic PKA value for atom at specified level", NULL);
+
+    /* Reaction mapping functions */
+    mkfn(env, 2, 2, Findigo_automap, "indigo-automap",
+         "Perform automatic atom-to-atom mapping on reaction", NULL);
+
+    mkfn(env, 2, 2, Findigo_get_atom_mapping_number, "indigo-get-atom-mapping-number",
+         "Get atom mapping number for reaction atom", NULL);
+
+    mkfn(env, 3, 3, Findigo_set_atom_mapping_number, "indigo-set-atom-mapping-number",
+         "Set atom mapping number for reaction atom", NULL);
+
+    mkfn(env, 1, 1, Findigo_clear_aam, "indigo-clear-aam",
+         "Clear all atom-to-atom mapping information from reaction", NULL);
+
+    mkfn(env, 1, 1, Findigo_correct_reacting_centers, "indigo-correct-reacting-centers",
+         "Correct reacting centers according to atom-to-atom mapping", NULL);
+
+    /* Reacting center functions */
+    mkfn(env, 2, 2, Findigo_get_reacting_center, "indigo-get-reacting-center",
+         "Get reacting center value for reaction bond", NULL);
+
+    mkfn(env, 3, 3, Findigo_set_reacting_center, "indigo-set-reacting-center",
+         "Set reacting center value for reaction bond", NULL);
 
     emacs_value Qprovide = env->intern(env, "provide");
     emacs_value Qfeat = env->intern(env, "indigo");
