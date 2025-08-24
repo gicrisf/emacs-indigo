@@ -73,6 +73,12 @@ emacs_value op_do_cml(emacs_env *env, int mol);
 emacs_value op_do_has_stereochemistry(emacs_env *env, int mol);
 emacs_value op_do_is_chiral(emacs_env *env, int mol);
 emacs_value op_do_has_coordinates(emacs_env *env, int mol);
+emacs_value op_do_most_abundant_mass(emacs_env *env, int mol);
+emacs_value op_do_monoisotopic_mass(emacs_env *env, int mol);
+emacs_value op_do_layered_code(emacs_env *env, int mol);
+emacs_value op_do_has_z_coord(emacs_env *env, int mol);
+emacs_value op_do_heavy_atom_count(emacs_env *env, int mol);
+emacs_value op_do_symmetry_classes(emacs_env *env, int mol);
 
 /* Two-molecule operation implementations */
 emacs_value op_do_substructure_match(emacs_env *env, int target_mol, int query_mol);
@@ -122,6 +128,12 @@ emacs_value op_indigo_symbol(emacs_env *env, int atom);
 emacs_value op_indigo_normalize(emacs_env *env, int structure, const char *options);
 emacs_value op_indigo_standardize(emacs_env *env, int item);
 emacs_value op_indigo_ionize(emacs_env *env, int item, float pH, float pH_toll);
+emacs_value op_indigo_most_abundant_mass(emacs_env *env, int mol);
+emacs_value op_indigo_monoisotopic_mass(emacs_env *env, int mol);
+emacs_value op_indigo_layered_code(emacs_env *env, int mol);
+emacs_value op_indigo_has_z_coord(emacs_env *env, int mol);
+emacs_value op_indigo_count_heavy_atoms(emacs_env *env, int mol);
+emacs_value op_indigo_symmetry_classes(emacs_env *env, int mol);
 
 /* System operation function declarations */
 emacs_value op_indigo_version(emacs_env *env);
@@ -209,6 +221,12 @@ emacs_value Fdo_cml(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *da
 emacs_value Fdo_has_stereochemistry(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_is_chiral(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_has_coordinates(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_most_abundant_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_monoisotopic_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_layered_code(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_heavy_atom_count(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Fdo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_substructure_match(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_exact_match(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_similarity(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
@@ -254,6 +272,12 @@ emacs_value Findigo_symbol(emacs_env *env, ptrdiff_t nargs, emacs_value *args, v
 emacs_value Findigo_normalize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_standardize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_ionize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_most_abundant_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_monoisotopic_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_layered_code(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_count_heavy_atoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 /* System Emacs wrapper function declarations */
 emacs_value Findigo_version(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);

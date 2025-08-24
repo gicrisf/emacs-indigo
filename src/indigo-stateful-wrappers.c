@@ -714,3 +714,34 @@ emacs_value Findigo_set_reacting_center(emacs_env *env, ptrdiff_t nargs, emacs_v
     int rc = env->extract_integer(env, args[2]);
     return op_indigo_set_reacting_center(env, reaction, reaction_bond, rc);
 }
+
+/* Additional core molecular property functions for 100% coverage */
+emacs_value Findigo_most_abundant_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_most_abundant_mass(env, mol);
+}
+
+emacs_value Findigo_monoisotopic_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_monoisotopic_mass(env, mol);
+}
+
+emacs_value Findigo_layered_code(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_layered_code(env, mol);
+}
+
+emacs_value Findigo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_has_z_coord(env, mol);
+}
+
+emacs_value Findigo_count_heavy_atoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_count_heavy_atoms(env, mol);
+}
+
+emacs_value Findigo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int mol = env->extract_integer(env, args[0]);
+    return op_indigo_symmetry_classes(env, mol);
+}

@@ -215,6 +215,24 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_has_coordinates, "indigo-has-coordinates",
          "Check if molecule has coordinates", NULL);
 
+    mkfn(env, 1, 1, Findigo_most_abundant_mass, "indigo-most-abundant-mass",
+         "Get most abundant mass from molecule handle", NULL);
+
+    mkfn(env, 1, 1, Findigo_monoisotopic_mass, "indigo-monoisotopic-mass", 
+         "Get monoisotopic mass from molecule handle", NULL);
+
+    mkfn(env, 1, 1, Findigo_layered_code, "indigo-layered-code",
+         "Get layered code from molecule handle", NULL);
+
+    mkfn(env, 1, 1, Findigo_has_z_coord, "indigo-has-z-coord",
+         "Check if molecule has 3D coordinates", NULL);
+
+    mkfn(env, 1, 1, Findigo_count_heavy_atoms, "indigo-count-heavy-atoms",
+         "Get heavy atom count from molecule handle", NULL);
+
+    mkfn(env, 1, 1, Findigo_symmetry_classes, "indigo-symmetry-classes",
+         "Get symmetry classes from molecule handle", NULL);
+
     mkfn(env, 2, 3, Findigo_exact_match, "indigo-exact-match",
          "Check exact match between two molecules", NULL);
 

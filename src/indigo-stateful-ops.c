@@ -469,7 +469,7 @@ emacs_value op_indigo_iterate_reactants(emacs_env *env, int reaction) {
     int iterator = indigoIterateReactants(reaction);
     if (iterator == -1) {
         return env->intern(env, "nil");
-    }
+    }
     return env->make_integer(env, iterator);
 }
 
@@ -614,4 +614,51 @@ emacs_value op_indigo_get_reacting_center(emacs_env *env, int reaction, int reac
 emacs_value op_indigo_set_reacting_center(emacs_env *env, int reaction, int reaction_bond, int rc) {
     int result = indigoSetReactingCenter(reaction, reaction_bond, rc);
     return env->make_integer(env, result);
+}
+
+/* Core functions, maybe I should move these up */
+emacs_value op_indigo_most_abundant_mass(emacs_env *env, int mol) {
+    float mass = indigoMostAbundantMass(mol);
+    return env->make_float(env, mass);
+}
+
+emacs_value op_indigo_monoisotopic_mass(emacs_env *env, int mol) {
+    float mass = indigoMonoisotopicMass(mol);
+    return env->make_float(env, mass);
+}
+
+emacs_value op_indigo_layered_code(emacs_env *env, int mol) {
+    const char* code = indigoLayeredCode(mol);
+    return env->make_string(env, code, strlen(code));
+}
+
+emacs_value op_indigo_has_z_coord(emacs_env *env, int mol) {
+    int has_z = indigoHasZCoord(mol);
+    if (has_z) {
+        return env->intern(env, "t");
+    } else {
+        return env->intern(env, "nil");
+    }
+}
+
+emacs_value op_indigo_count_heavy_atoms(emacs_env *env, int mol) {
+    int count = indigoCountHeavyAtoms(mol);
+    return env->make_integer(env, count);
+}
+
+emacs_value op_indigo_symmetry_classes(emacs_env *env, int mol) {
+    int count_out;
+    const int* classes = indigoSymmetryClasses(mol, &count_out);
+    if (classes == NULL) {
+        return env->intern(env, "nil");
+    }
+    
+    /* Create a list of symmetry classes */
+    emacs_value result = env->intern(env, "nil");
+    for (int i = count_out - 1; i >= 0; i--) {
+        emacs_value class_val = env->make_integer(env, classes[i]);
+        result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){class_val, result});
+    }
+    
+    return result;
 }
