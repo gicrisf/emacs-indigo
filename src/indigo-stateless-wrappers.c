@@ -149,3 +149,34 @@ emacs_value Fdo_reaction_reactants_count(emacs_env *env, ptrdiff_t nargs, emacs_
     return reactionstring_op(env, args[0], op_do_reaction_reactants_count);
 }
 
+/* Additional molecular property wrapper functions */
+emacs_value Fdo_most_abundant_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_most_abundant_mass);
+}
+
+emacs_value Fdo_monoisotopic_mass(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_monoisotopic_mass);
+}
+
+emacs_value Fdo_layered_code(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_layered_code);
+}
+
+emacs_value Fdo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_has_z_coord);
+}
+
+emacs_value Fdo_heavy_atom_count(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_heavy_atom_count);
+}
+
+emacs_value Fdo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    (void)nargs; (void)data;
+    return molstring_op(env, args[0], op_do_symmetry_classes);
+}
+

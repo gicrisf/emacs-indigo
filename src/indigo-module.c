@@ -124,6 +124,24 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Fdo_reaction_reactants_count, "indigo-do-reaction-reactants-count",
          "Get number of reactants from reaction SMILES", NULL);
 
+    mkfn(env, 1, 1, Fdo_most_abundant_mass, "indigo-do-most-abundant-mass",
+         "Get most abundant mass from molecular string", NULL);
+
+    mkfn(env, 1, 1, Fdo_monoisotopic_mass, "indigo-do-monoisotopic-mass", 
+         "Get monoisotopic mass from molecular string", NULL);
+
+    mkfn(env, 1, 1, Fdo_layered_code, "indigo-do-layered-code",
+         "Get layered code from molecular string", NULL);
+
+    mkfn(env, 1, 1, Fdo_has_z_coord, "indigo-do-has-z-coord",
+         "Check if molecule has Z coordinates from molecular string", NULL);
+
+    mkfn(env, 1, 1, Fdo_heavy_atom_count, "indigo-do-heavy-atom-count",
+         "Get heavy atom count from molecular string", NULL);
+
+    mkfn(env, 1, 1, Fdo_symmetry_classes, "indigo-do-symmetry-classes",
+         "Get symmetry classes from molecular string", NULL);
+
     /* Stateful functions */
     mkfn(env, 1, 1, Findigo_free, "indigo-free",
          "Free an Indigo object handle", NULL);

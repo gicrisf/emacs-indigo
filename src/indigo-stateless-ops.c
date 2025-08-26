@@ -282,3 +282,46 @@ emacs_value op_do_reaction_reactants_count(emacs_env *env, const char *reaction_
     indigoFree(reaction);
     return env->make_integer(env, count);
 }
+
+/* Additional molecular property operations */
+emacs_value op_do_most_abundant_mass(emacs_env *env, int mol) {
+    float mass = indigoMostAbundantMass(mol);
+    return env->make_float(env, mass);
+}
+
+emacs_value op_do_monoisotopic_mass(emacs_env *env, int mol) {
+    float mass = indigoMonoisotopicMass(mol);
+    return env->make_float(env, mass);
+}
+
+emacs_value op_do_layered_code(emacs_env *env, int mol) {
+    const char* code = indigoLayeredCode(mol);
+    return env->make_string(env, code, strlen(code));
+}
+
+emacs_value op_do_has_z_coord(emacs_env *env, int mol) {
+    int has_z = indigoHasZCoord(mol);
+    return has_z ? env->intern(env, "t") : env->intern(env, "nil");
+}
+
+emacs_value op_do_heavy_atom_count(emacs_env *env, int mol) {
+    int count = indigoCountHeavyAtoms(mol);
+    return env->make_integer(env, count);
+}
+
+emacs_value op_do_symmetry_classes(emacs_env *env, int mol) {
+    int count_out;
+    const int* classes = indigoSymmetryClasses(mol, &count_out);
+    if (classes == NULL) {
+        return env->intern(env, "nil");
+    }
+    
+    /* Create a list of symmetry classes */
+    emacs_value result = env->intern(env, "nil");
+    for (int i = count_out - 1; i >= 0; i--) {
+        emacs_value class_val = env->make_integer(env, classes[i]);
+        result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){class_val, result});
+    }
+    
+    return result;
+}

@@ -4,6 +4,7 @@
 
 # Build artifacts
 *.d
+build
 
 # Test executables
 test-indigo
