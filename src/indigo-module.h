@@ -201,6 +201,19 @@ emacs_value op_indigo_correct_reacting_centers(emacs_env *env, int reaction);
 emacs_value op_indigo_get_reacting_center(emacs_env *env, int reaction, int reaction_bond);
 emacs_value op_indigo_set_reacting_center(emacs_env *env, int reaction, int reaction_bond, int rc);
 
+/* Renderer operation function declarations */
+emacs_value op_indigo_write_file(emacs_env *env, const char *filename);
+emacs_value op_indigo_write_buffer(emacs_env *env);
+emacs_value op_indigo_to_buffer(emacs_env *env, int handle);
+emacs_value op_indigo_create_array(emacs_env *env);
+emacs_value op_indigo_array_add(emacs_env *env, int array, int object);
+emacs_value op_indigo_render(emacs_env *env, int object, int output);
+emacs_value op_indigo_render_to_file(emacs_env *env, int object, const char *filename);
+emacs_value op_indigo_render_grid(emacs_env *env, int objects, int *ref_atoms, int n_columns, int output);
+emacs_value op_indigo_render_grid_to_file(emacs_env *env, int objects, int *ref_atoms, int n_columns, const char *filename);
+emacs_value op_indigo_render_reset(emacs_env *env);
+emacs_value op_indigo_render_write_hdc(emacs_env *env, void *hdc, int printing_hdc);
+
 /* Stateless Emacs wrapper function declarations */
 emacs_value Fdo_molecular_formula(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Fdo_molecular_weight(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
@@ -344,5 +357,18 @@ emacs_value Findigo_correct_reacting_centers(emacs_env *env, ptrdiff_t nargs, em
 /* Reacting center Emacs wrapper function declarations */
 emacs_value Findigo_get_reacting_center(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_set_reacting_center(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+
+/* Renderer Emacs wrapper function declarations */
+emacs_value Findigo_write_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_write_buffer(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_to_buffer(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_create_array(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_array_add(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render_to_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render_grid(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render_grid_to_file(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render_reset(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_render_write_hdc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 #endif /* INDIGO_MODULE_H */

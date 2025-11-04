@@ -445,6 +445,40 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 3, 3, Findigo_set_reacting_center, "indigo-set-reacting-center",
          "Set reacting center value for reaction bond", NULL);
 
+    /* Renderer functions */
+    mkfn(env, 1, 1, Findigo_write_file, "indigo-write-file",
+         "Create file output writer", NULL);
+
+    mkfn(env, 0, 0, Findigo_write_buffer, "indigo-write-buffer",
+         "Create buffer output writer", NULL);
+
+    mkfn(env, 1, 1, Findigo_to_buffer, "indigo-to-buffer",
+         "Convert output handle to buffer string", NULL);
+
+    mkfn(env, 0, 0, Findigo_create_array, "indigo-create-array",
+         "Create array for multiple objects", NULL);
+
+    mkfn(env, 2, 2, Findigo_array_add, "indigo-array-add",
+         "Add object to array", NULL);
+
+    mkfn(env, 2, 2, Findigo_render, "indigo-render",
+         "Render object to output", NULL);
+
+    mkfn(env, 2, 2, Findigo_render_to_file, "indigo-render-to-file",
+         "Render object directly to file", NULL);
+
+    mkfn(env, 4, 4, Findigo_render_grid, "indigo-render-grid",
+         "Render objects as grid to output", NULL);
+
+    mkfn(env, 4, 4, Findigo_render_grid_to_file, "indigo-render-grid-to-file",
+         "Render objects as grid directly to file", NULL);
+
+    mkfn(env, 0, 0, Findigo_render_reset, "indigo-render-reset",
+         "Reset renderer settings", NULL);
+
+    mkfn(env, 2, 2, Findigo_render_write_hdc, "indigo-render-write-hdc",
+         "Create HDC output writer (Windows-specific)", NULL);
+
     emacs_value Qprovide = env->intern(env, "provide");
     emacs_value Qfeat = env->intern(env, "indigo");
     env->funcall(env, Qprovide, 1, &Qfeat);
