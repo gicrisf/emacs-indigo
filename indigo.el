@@ -16,7 +16,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;; Author: Giovanni Crisalfi
-;; Version: 1.0.0
+;; Version: 0.8.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: data tools extensions
 ;; URL: https://github.com/gicrisf/emacs-indigo
@@ -101,6 +101,39 @@ Each item is freed after FUNC is applied to it."
            collect (unwind-protect
                        (funcall func item)
                      (indigo-free item))))
+
+;;; Lazy Stream Abstraction
+
+(defun indigo-stream (iterator)
+  "Create a lazy stream from an Indigo ITERATOR.
+Returns a stream which is either:
+  - nil (empty stream, iterator exhausted)
+  - (element . thunk) where thunk produces the next stream
+
+The stream does NOT take ownership of the iterator - the caller
+is responsible for freeing it when done (use indigo's `let`s!).
+
+Example (fully manual):
+  (let ((iter (indigo-iterate-atoms mol)))
+    (unwind-protect
+        (let ((stream (indigo-stream iter)))
+          (indigo-stream-collect stream #\\='indigo-symbol))
+      (indigo-free iter)))
+  => (\"C\" \"C\" \"O\")"
+  (when iterator
+    (let ((element (indigo-next iterator)))
+      (when element
+        ;; Create stream node: (value . thunk-to-next-node)
+        (cons element
+              (lambda () (indigo-stream iterator)))))))
+
+(defun indigo-stream-next (stream)
+  "Advance STREAM by forcing the thunk, returning the next stream.
+Returns nil if stream is exhausted."
+  (when stream
+    (let ((thunk (cdr stream)))
+      (when (functionp thunk)
+        (funcall thunk)))))
 
 ;;; Resource Management Macros
 
