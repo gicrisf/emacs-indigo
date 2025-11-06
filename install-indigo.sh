@@ -7,6 +7,14 @@ echo "Installing Indigo cheminformatics library..."
 
 # Create directory structure
 mkdir -p indigo-install/{include,lib}
+
+# Check if Indigo is already installed
+if [ -n "$(ls -A indigo-install/lib/ 2>/dev/null)" ] && [ -n "$(ls -A indigo-install/include/ 2>/dev/null)" ]; then
+    echo "Indigo already installed, skipping download."
+    echo "To reinstall, remove the indigo-install directory first."
+    exit 0
+fi
+
 cd indigo-install
 
 # Try downloading Ubuntu .deb package
@@ -27,10 +35,17 @@ if wget -q "$DEB_URL" 2>/dev/null || curl -s -O "$DEB_URL" 2>/dev/null; then
 
     # Copy files from extracted directory
     if [ -d "extracted/usr/include" ]; then
-        find extracted/usr/include -name "indigo*.h" -exec cp {} ../../include/ \; 2>/dev/null || true
+        cp extracted/usr/include/indigo*.h ../include/ 2>/dev/null || true
     fi
     if [ -d "extracted/usr/lib" ]; then
-        find extracted/usr/lib -name "libindigo*" -exec cp {} ../../lib/ \; 2>/dev/null || true
+        cp extracted/usr/lib/libindigo* ../lib/ 2>/dev/null || true
+    fi
+
+    # Verify files were copied
+    if [ ! -f "../include/indigo.h" ] || [ ! -f "../lib/libindigo-static.a" ]; then
+        echo "Error: Failed to extract Indigo files from .deb package"
+        cd ../..
+        exit 1
     fi
 
     echo "Successfully extracted from .deb package"

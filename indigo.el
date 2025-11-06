@@ -81,12 +81,23 @@
 
 ;; Load the compiled module
 (defun indigo-load-module ()
-  "Load the indigo dynamic module."
-  (let ((module-path (expand-file-name "build/indigo-module.so"
-                                       (file-name-directory
-                                        (or load-file-name buffer-file-name)))))
-    (when (file-exists-p module-path)
-      (module-load module-path))))
+  "Load the indigo dynamic module, building it first if necessary."
+  (let* ((pkg-dir (file-name-directory (or load-file-name buffer-file-name)))
+         (module-path (expand-file-name "build/indigo-module.so" pkg-dir))
+         (indigo-dir (expand-file-name "indigo-install" pkg-dir)))
+    ;; Check if Indigo library is installed
+    (unless (file-directory-p indigo-dir)
+      (error "Indigo library not found. Run './install.sh' in %s" pkg-dir))
+    ;; Build module if it doesn't exist
+    (unless (file-exists-p module-path)
+      (message "Indigo module not found, building...")
+      (let ((default-directory pkg-dir))
+        (unless (zerop (call-process "make" nil "*indigo-build*" nil))
+          (error "Failed to build indigo module. Check *indigo-build* buffer for details"))))
+    ;; Load the module
+    (if (file-exists-p module-path)
+        (module-load module-path)
+      (error "Indigo module not found at %s. Run 'make' in %s" module-path pkg-dir))))
 
 ;; Load the module when this file is loaded
 (indigo-load-module)

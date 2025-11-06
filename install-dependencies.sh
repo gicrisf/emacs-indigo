@@ -7,6 +7,14 @@ echo "Installing TinyXML and zlib as static dependencies..."
 
 # Create directory structure
 mkdir -p deps-install/{include,lib}
+
+# Check if dependencies are already installed
+if [ -f "deps-install/lib/libtinyxml.a" ] && [ -f "deps-install/lib/libz.a" ]; then
+    echo "Dependencies already installed, skipping download and build."
+    echo "To reinstall, remove the deps-install directory first."
+    exit 0
+fi
+
 cd deps-install
 
 # Install TinyXML
