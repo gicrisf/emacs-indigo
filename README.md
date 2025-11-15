@@ -80,7 +80,7 @@ All `indigo-do-*` functions handle resource management automatically.
 
 ### Advanced Examples
 
-The `indigo-with-*` macros provide automatic resource management for all Indigo objects and the `indigo-map` function lets you easily handle an iterator:
+The `indigo-with-*` macros provide automatic resource management for all Indigo objects. The `indigo-map` function lets you easily work with iterators:
 
 ```elisp
 ;; Analyze a molecule's structure
@@ -89,37 +89,43 @@ The `indigo-with-*` macros provide automatic resource management for all Indigo 
     ;; Get all atom symbols
     (indigo-map #'indigo-symbol atoms)))
 ;; => ("C" "C" "C" "C" "C" "C")
+
+;; Compare molecular weights of multiple molecules
+(indigo-with-molecule* ((ethanol "CCO")
+                        (benzene "c1ccccc1")
+                        (propane "CCC"))
+  (list (indigo-molecular-weight ethanol)
+        (indigo-molecular-weight benzene)
+        (indigo-molecular-weight propane)))
+;; => (46.069 78.114 44.097)
 ```
 
 Available `indigo-with-*` macros:
-- Molecules: `indigo-with-molecule`, `indigo-with-mol-file`, `indigo-with-query-molecule`, `indigo-with-query-mol-file`, `indigo-with-smarts`, `indigo-with-smarts-file`
+
+**Singular macros** (single resource binding):
+- Molecules: `indigo-with-molecule`, `indigo-with-mol-file`, `indigo-with-query`, `indigo-with-query-file`, `indigo-with-smarts`, `indigo-with-smarts-file`
 - Reactions: `indigo-with-reaction`, `indigo-with-rxn-file`
 - Iterators: `indigo-with-atoms-iterator`, `indigo-with-bonds-iterator`, `indigo-with-neighbors-iterator`, `indigo-with-components-iterator`, `indigo-with-sssr-iterator`, `indigo-with-rings-iterator`, `indigo-with-subtrees-iterator`, `indigo-with-stereocenters-iterator`, `indigo-with-reactants-iterator`, `indigo-with-products-iterator`
 - Fingerprints: `indigo-with-fingerprint`
 - Matchers: `indigo-with-matcher`
 - Arrays: `indigo-with-array`
-- Writers: `indigo-with-file-writer`, `indigo-with-buffer-writer`
 
-For complex workflows with multiple resources, you can also use `indigo-let*` with keyword-based bindings:
+**Sequential multiple binding macros** (multiple resources with `*` suffix, like `let*`):
+- Molecules: `indigo-with-molecule*`, `indigo-with-mol-file*`, `indigo-with-query*`, `indigo-with-query-file*`, `indigo-with-smarts*`, `indigo-with-smarts-file*`
+- Fingerprints: `indigo-with-fingerprint*`
+- Matchers: `indigo-with-matcher*`
+
+Bindings in `*` macros are evaluated sequentially, with proper cleanup even if later bindings fail:
 
 ```elisp
 ;; Compare two molecules
-(indigo-let* ((:molecule mol1 "CCO")      ; Ethanol
-              (:molecule mol2 "CC(O)C")   ; Isopropanol
-              (:fingerprint fp1 mol1 "sim")
-              (:fingerprint fp2 mol2 "sim"))
-  (indigo-similarity fp1 fp2 :tanimoto))
+(indigo-with-molecule* ((mol1 "CCO")       ; Ethanol
+                        (mol2 "CC(O)C"))   ; Isopropanol
+  (indigo-with-fingerprint* ((fp1 mol1 "sim")
+                             (fp2 mol2 "sim"))
+    (indigo-similarity fp1 fp2 :tanimoto)))
 ;; => 0.714 (similarity coefficient)
 ```
-
-Supported keyword bindings:
-- Molecules: `:molecule`, `:mol-file`, `:query`, `:query-file`, `:smarts`, `:smarts-file`
-- Reactions: `:reaction`, `:rxn-file`
-- Iterators: `:atoms`, `:bonds`, `:neighbors`, `:components`, `:sssr`, `:rings`, `:subtrees`, `:stereocenters`, `:reactants`, `:products`
-- Fingerprints: `:fingerprint`
-- Matchers: `:matcher`
-- Arrays: `:array`
-- Writers: `:file-writer`, `:buffer-writer`
 
 ### Reactions
 

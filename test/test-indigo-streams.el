@@ -28,14 +28,14 @@
           ;; Rest should be a thunk
           (should (functionp (cdr forced))))))))
 
-(ert-deftest test-indigo-stream-next ()
+(ert-deftest test-indigo-stream-rest ()
   "Test advancing through a stream."
   (indigo-with-molecule (mol "CCO")
     (indigo-with-atoms-iterator (atoms mol)
       (let* ((stream (indigo-stream atoms))
-             (first-val (indigo-stream-car stream))
-             (stream (indigo-stream-next stream))
-             (second-val (indigo-stream-car stream)))
+             (first-val (indigo-stream-first stream))
+             (stream (indigo-stream-rest stream))
+             (second-val (indigo-stream-first stream)))
         ;; First and second values should be different
         (should (not (= first-val second-val)))
         ;; Both should be valid handles
@@ -52,11 +52,11 @@
         ;; Single carbon - stream should not be empty
         (should-not (indigo-stream-empty-p stream))
         ;; Get and free the handle
-        (let ((atom (indigo-stream-car stream)))
+        (let ((atom (indigo-stream-first stream)))
           (should (integerp atom))
           (indigo-free atom))
         ;; Advance to next (which should be empty)
-        (setq stream (indigo-stream-next stream))
+        (setq stream (indigo-stream-rest stream))
         ;; Now, stream should be empty
         (should (indigo-stream-empty-p stream))))))
 
@@ -68,19 +68,19 @@
     (indigo-with-atoms-iterator (atoms mol)
       (let ((stream (indigo-stream atoms)))
         ;; Get first atom
-        (let* ((first-handle (indigo-stream-car stream))
+        (let* ((first-handle (indigo-stream-first stream))
                (first-sym (indigo-symbol first-handle)))
           (should (equal "C" first-sym))
           (indigo-free first-handle))
         ;; Advance and get second
-        (setq stream (indigo-stream-next stream))
-        (let* ((second-handle (indigo-stream-car stream))
+        (setq stream (indigo-stream-rest stream))
+        (let* ((second-handle (indigo-stream-first stream))
                (second-sym (indigo-symbol second-handle)))
           (should (equal "C" second-sym))
           (indigo-free second-handle))
         ;; Advance and get third
-        (setq stream (indigo-stream-next stream))
-        (let* ((third-handle (indigo-stream-car stream))
+        (setq stream (indigo-stream-rest stream))
+        (let* ((third-handle (indigo-stream-first stream))
                (third-sym (indigo-symbol third-handle)))
           (should (equal "O" third-sym))
           (indigo-free third-handle))))))
@@ -96,15 +96,15 @@
                            (indigo-free atom)))
                        stream)))
         ;; First symbol should be "C"
-        (should (equal "C" (indigo-stream-car symbols)))
+        (should (equal "C" (indigo-stream-first symbols)))
         ;; Advance to second
-        (setq symbols (indigo-stream-next symbols))
-        (should (equal "C" (indigo-stream-car symbols)))
+        (setq symbols (indigo-stream-rest symbols))
+        (should (equal "C" (indigo-stream-first symbols)))
         ;; Advance to third
-        (setq symbols (indigo-stream-next symbols))
-        (should (equal "O" (indigo-stream-car symbols)))
+        (setq symbols (indigo-stream-rest symbols))
+        (should (equal "O" (indigo-stream-first symbols)))
         ;; Advance past end
-        (setq symbols (indigo-stream-next symbols))
+        (setq symbols (indigo-stream-rest symbols))
         (should (indigo-stream-empty-p symbols))))))
 
 (ert-deftest test-indigo-stream-map-charges ()
@@ -118,11 +118,11 @@
                            (indigo-free atom)))
                        stream)))
         ;; All carbons in benzene should have charge 0
-        (should (= 0 (indigo-stream-car charges)))
-        (setq charges (indigo-stream-next charges))
-        (should (= 0 (indigo-stream-car charges)))
-        (setq charges (indigo-stream-next charges))
-        (should (= 0 (indigo-stream-car charges)))))))
+        (should (= 0 (indigo-stream-first charges)))
+        (setq charges (indigo-stream-rest charges))
+        (should (= 0 (indigo-stream-first charges)))
+        (setq charges (indigo-stream-rest charges))
+        (should (= 0 (indigo-stream-first charges)))))))
 
 (ert-deftest test-indigo-stream-map-empty ()
   "Test mapping over empty stream."
@@ -130,9 +130,9 @@
     (indigo-with-atoms-iterator (atoms mol)
       (let ((stream (indigo-stream atoms)))
         ;; Free first element
-        (indigo-free (indigo-stream-car stream))
+        (indigo-free (indigo-stream-first stream))
         ;; Advance to empty stream
-        (setq stream (indigo-stream-next stream))
+        (setq stream (indigo-stream-rest stream))
         ;; Map over empty stream should return nil (thunk that forces to nil)
         (let ((mapped (indigo-stream-map #'indigo-symbol stream)))
           (should (indigo-stream-empty-p mapped)))))))
@@ -152,13 +152,13 @@
           ;; Creating the mapped stream should not call the function
           (should (= 0 call-count))
           ;; Accessing first element should call once
-          (let ((first (indigo-stream-car mapped)))
+          (let ((first (indigo-stream-first mapped)))
             (should (= 1 call-count))
             (should (equal "C" first)))
           ;; Advancing to second element should call once more
-          (setq mapped (indigo-stream-next mapped))
+          (setq mapped (indigo-stream-rest mapped))
           (should (= 1 call-count))  ; Still 1 because we haven't accessed car yet
-          (let ((second (indigo-stream-car mapped)))
+          (let ((second (indigo-stream-first mapped)))
             (should (= 2 call-count))
             (should (equal "C" second))))))))
 
@@ -180,13 +180,13 @@
                         (lambda (s) (concat "atom-" s))
                         lower)))
         ;; Check first element through all transformations
-        (should (equal "atom-c" (indigo-stream-car prefixed)))
+        (should (equal "atom-c" (indigo-stream-first prefixed)))
         ;; Check second element
-        (setq prefixed (indigo-stream-next prefixed))
-        (should (equal "atom-c" (indigo-stream-car prefixed)))
+        (setq prefixed (indigo-stream-rest prefixed))
+        (should (equal "atom-c" (indigo-stream-first prefixed)))
         ;; Check third element
-        (setq prefixed (indigo-stream-next prefixed))
-        (should (equal "atom-o" (indigo-stream-car prefixed)))))))
+        (setq prefixed (indigo-stream-rest prefixed))
+        (should (equal "atom-o" (indigo-stream-first prefixed)))))))
 
 (ert-deftest test-indigo-stream-map-complex-molecule ()
   "Test mapping over a more complex molecule."
@@ -201,11 +201,101 @@
              (collected nil))
         ;; Collect all symbols
         (while (not (indigo-stream-empty-p symbols))
-          (push (indigo-stream-car symbols) collected)
-          (setq symbols (indigo-stream-next symbols)))
+          (push (indigo-stream-first symbols) collected)
+          (setq symbols (indigo-stream-rest symbols)))
         ;; Should have 6 heavy atoms: C-C-C-C-O-O
         (should (= 6 (length collected)))
         (should (equal '("O" "O" "C" "C" "C" "C") collected))))))
+
+;;; Stream Collect Operations
+
+(ert-deftest test-indigo-stream-collect-basic ()
+  "Test basic stream collection."
+  (indigo-with-molecule (mol "CCO")  ; Ethanol
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((symbols (indigo-stream-map #'indigo-symbol stream))
+             (collected (indigo-stream-collect symbols)))
+        ;; Should collect all 3 symbols in order
+        (should (equal '("C" "C" "O") collected))))))
+
+(ert-deftest test-indigo-stream-collect-empty ()
+  "Test collecting from an empty stream."
+  (indigo-with-molecule (mol "C")
+    (indigo-with-atoms-stream (stream mol)
+      ;; Advance to empty stream
+      (setq stream (indigo-stream-rest stream))
+      ;; Collect from empty stream should return empty list
+      (let ((collected (indigo-stream-collect stream)))
+        (should (equal '() collected))))))
+
+(ert-deftest test-indigo-stream-collect-charges ()
+  "Test collecting charges from a molecule."
+  (indigo-with-molecule (mol "c1ccccc1")  ; Benzene
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((charges (indigo-stream-map #'indigo-charge stream))
+             (collected (indigo-stream-collect charges)))
+        ;; All 6 carbons in benzene should have charge 0
+        (should (equal '(0 0 0 0 0 0) collected))))))
+
+(ert-deftest test-indigo-stream-collect-with-chaining ()
+  "Test collecting from chained map operations."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* (;; First map: extract symbols
+             (symbols (indigo-stream-map #'indigo-symbol stream))
+             ;; Second map: convert to lowercase
+             (lower (indigo-stream-map #'downcase symbols))
+             ;; Third map: add prefix
+             (prefixed (indigo-stream-map
+                        (lambda (s) (concat "atom-" s))
+                        lower))
+             ;; Collect final result
+             (collected (indigo-stream-collect prefixed)))
+        ;; Should have all transformations applied
+        (should (equal '("atom-c" "atom-c" "atom-o") collected))))))
+
+(ert-deftest test-indigo-stream-collect-complex-molecule ()
+  "Test collecting from a complex molecule."
+  (indigo-with-molecule (mol "CC(C)C(=O)O")  ; Isobutyric acid
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((symbols (indigo-stream-map #'indigo-symbol stream))
+             (collected (indigo-stream-collect symbols)))
+        ;; Should have 6 heavy atoms: C-C-C-C-O-O
+        (should (= 6 (length collected)))
+        (should (equal '("C" "C" "C" "C" "O" "O") collected))))))
+
+(ert-deftest test-indigo-stream-collect-preserves-order ()
+  "Test that collect preserves stream order."
+  (indigo-with-molecule (mol "CCCCC")  ; Pentane
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((indices (indigo-stream-map #'indigo-index stream))
+             (collected (indigo-stream-collect indices)))
+        ;; Indices should be in order: 0, 1, 2, 3, 4
+        (should (equal '(0 1 2 3 4) collected))))))
+
+(ert-deftest test-indigo-stream-collect-bonds ()
+  "Test collecting bond information from a molecule."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-bonds-stream (stream mol)
+      (let* ((bond-orders (indigo-stream-map #'indigo-bond-order stream))
+             (collected (indigo-stream-collect bond-orders)))
+        ;; CCO has 2 single bonds
+        (should (equal '(:single :single) collected))))))
+
+(ert-deftest test-indigo-stream-collect-partial-consumption ()
+  "Test that collect works after partial stream consumption."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane (6 carbons)
+    (indigo-with-atoms-stream (stream mol)
+      (let ((symbols (indigo-stream-map #'indigo-symbol stream)))
+        ;; Consume first 2 elements
+        (should (equal "C" (indigo-stream-first symbols)))
+        (setq symbols (indigo-stream-rest symbols))
+        (should (equal "C" (indigo-stream-first symbols)))
+        (setq symbols (indigo-stream-rest symbols))
+        ;; Collect remaining elements
+        (let ((collected (indigo-stream-collect symbols)))
+          ;; Should have remaining 4 carbons
+          (should (equal '("C" "C" "C" "C") collected)))))))
 
 ;;; With-style Macro Tests
 
@@ -213,7 +303,7 @@
 ;; (ert-deftest test-indigo-with-stream-from-iterator-macro-expansion ()
 ;;   "Print the actual macro expansion for inspection."
 ;;   (let* ((form '(indigo-with-stream-from-iterator (stream atoms)
-;;                   (let ((first (indigo-stream-car stream)))
+;;                   (let ((first (indigo-stream-first stream)))
 ;;                     (indigo-symbol first))))
 ;;          (expanded (macroexpand form)))
 ;;     (message "\n=== MACRO EXPANSION ===")
@@ -248,9 +338,9 @@
         (indigo-with-stream-from-iterator (stream atoms)
           ;; Collect all symbols (elements are still tracked for cleanup)
           (while (not (indigo-stream-empty-p stream))
-            (let ((atom (indigo-stream-car stream)))
+            (let ((atom (indigo-stream-first stream)))
               (push (indigo-symbol atom) symbols)
-              (setq stream (indigo-stream-next stream)))))))
+              (setq stream (indigo-stream-rest stream)))))))
     ;; All elements should have been freed automatically
     (should (equal '("O" "C" "C") symbols))))
 
@@ -263,7 +353,7 @@
           ;; Count bonds
           (while (not (indigo-stream-empty-p stream))
             (setq bond-count (1+ bond-count))
-            (setq stream (indigo-stream-next stream))))))
+            (setq stream (indigo-stream-rest stream))))))
     ;; CCO has 2 bonds
     (should (= 2 bond-count))))
 
@@ -277,8 +367,8 @@
           (let ((symbol-stream (indigo-stream-map #'indigo-symbol stream)))
             ;; Collect first 3 symbols
             (dotimes (_ 3)
-              (push (indigo-stream-car symbol-stream) symbols)
-              (setq symbol-stream (indigo-stream-next symbol-stream)))))))
+              (push (indigo-stream-first symbol-stream) symbols)
+              (setq symbol-stream (indigo-stream-rest symbol-stream)))))))
     ;; Should have 3 carbon symbols
     (should (= 3 (length symbols)))
     (should (equal '("C" "C" "C") symbols))))
@@ -290,7 +380,7 @@
       (indigo-with-atoms-iterator (atoms mol)
         (indigo-with-stream-from-iterator (stream atoms)
           ;; Only force first element
-          (let ((atom (indigo-stream-car stream)))
+          (let ((atom (indigo-stream-first stream)))
             (setq first-symbol (indigo-symbol atom))))))
     ;; Should have successfully gotten first symbol
     (should (equal "C" first-symbol))
@@ -307,9 +397,9 @@
           (indigo-with-atoms-iterator (atoms mol)
             (indigo-with-stream-from-iterator (stream atoms)
               ;; Force first two elements
-              (push (indigo-symbol (indigo-stream-car stream)) symbols)
-              (setq stream (indigo-stream-next stream))
-              (push (indigo-symbol (indigo-stream-car stream)) symbols)
+              (push (indigo-symbol (indigo-stream-first stream)) symbols)
+              (setq stream (indigo-stream-rest stream))
+              (push (indigo-symbol (indigo-stream-first stream)) symbols)
               ;; Trigger an error
               (error "Test error"))))
       (error (setq error-caught t)))
@@ -338,7 +428,7 @@
           ;; Count rings
           (while (not (indigo-stream-empty-p stream))
             (setq ring-count (1+ ring-count))
-            (setq stream (indigo-stream-next stream))))))
+            (setq stream (indigo-stream-rest stream))))))
     ;; Naphthalene has 2 SSSR rings
     (should (= 2 ring-count))))
 
@@ -350,14 +440,14 @@
         (indigo-with-stream-from-iterator (atom-stream atoms)
           ;; For each atom
           (while (not (indigo-stream-empty-p atom-stream))
-            (let ((atom (indigo-stream-car atom-stream)))
+            (let ((atom (indigo-stream-first atom-stream)))
               ;; Count its neighbors using a nested stream
               (indigo-with-neighbors-iterator (neighbors atom)
                 (indigo-with-stream-from-iterator (neighbor-stream neighbors)
                   (while (not (indigo-stream-empty-p neighbor-stream))
                     (setq total-neighbors (1+ total-neighbors))
-                    (setq neighbor-stream (indigo-stream-next neighbor-stream))))))
-            (setq atom-stream (indigo-stream-next atom-stream))))))
+                    (setq neighbor-stream (indigo-stream-rest neighbor-stream))))))
+            (setq atom-stream (indigo-stream-rest atom-stream))))))
     ;; Propane: C-C-C
     ;; First C has 1 neighbor, middle C has 2 neighbors, last C has 1 neighbor
     ;; Total: 1 + 2 + 1 = 4
@@ -382,13 +472,13 @@
             (unwind-protect
                 (progn
                   ;; Force all 3 atoms
-                  (let ((atom1 (indigo-stream-car stream)))
+                  (let ((atom1 (indigo-stream-first stream)))
                     (should (integerp atom1))
-                    (setq stream (indigo-stream-next stream))
-                    (let ((atom2 (indigo-stream-car stream)))
+                    (setq stream (indigo-stream-rest stream))
+                    (let ((atom2 (indigo-stream-first stream)))
                       (should (integerp atom2))
-                      (setq stream (indigo-stream-next stream))
-                      (let ((atom3 (indigo-stream-car stream)))
+                      (setq stream (indigo-stream-rest stream))
+                      (let ((atom3 (indigo-stream-first stream)))
                         (should (integerp atom3)))))
                   ;; Save the forced handles
                   (setq forced-handles (copy-sequence --tracked-elements--)))
@@ -436,9 +526,9 @@
             (unwind-protect
                 (progn
                   ;; Only force first 2 atoms
-                  (indigo-stream-car stream)
-                  (setq stream (indigo-stream-next stream))
-                  (indigo-stream-car stream)
+                  (indigo-stream-first stream)
+                  (setq stream (indigo-stream-rest stream))
+                  (indigo-stream-first stream)
                   ;; Save the forced handles
                   (setq forced-handles (copy-sequence --tracked-elements--)))
               ;; Manual cleanup to trigger frees we're measuring

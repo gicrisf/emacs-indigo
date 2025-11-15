@@ -33,18 +33,17 @@
 ;; Current API:
 ;; - `indigo-stream' - Create a lazy stream from an iterator (with optional tracking)
 ;; - `indigo-stream-force' - Force a stream thunk
-;; - `indigo-stream-car' - Force and get the current element
-;; - `indigo-stream-cdr' - Force and get the next stream thunk
-;; - `indigo-stream-next' - Force and get the next stream thunk (cdr alias)
+;; - `indigo-stream-first' - Force and get the first element
+;; - `indigo-stream-rest' - Force and get the rest of the stream
 ;; - `indigo-stream-empty-p' - Check if stream is empty
 ;; - `indigo-stream-map' - Map over stream elements
+;; - `indigo-stream-collect' - Collect all stream elements into a list
 ;; - `indigo-with-stream-from-iterator' - Macro for automatic element cleanup
 ;;
 ;; Planned Extensions:
 ;; - indigo-stream-filter - Filter stream by predicate
 ;; - indigo-stream-take - Take first N elements
 ;; - indigo-stream-fold - Fold/reduce operation
-;; - indigo-stream-collect - Collect stream into list
 
 ;;; Code:
 
@@ -89,29 +88,28 @@ is responsible for freeing it when done."
   (when (functionp stream)
     (funcall stream)))
 
-(defun indigo-stream-car (stream)
-  "Force STREAM and return the current element, or nil if empty.
+(defun indigo-stream-first (stream)
+  "Force STREAM and return the first element, or nil if empty.
 
 Example:
-  (indigo-let* ((:molecule mol \"CCO\")
-                (:atoms atoms mol)
-                (stream (indigo-stream atoms)))
-    (indigo-stream-car stream))  ; => atom handle"
+  (indigo-with-molecule (mol \"CCO\")
+    (indigo-with-atoms-stream (stream mol)
+      (indigo-stream-first stream)))  ; => atom handle"
   (let ((forced (indigo-stream-force stream)))
     (when forced
       (car forced))))
 
-(defun indigo-stream-cdr (stream)
-  "Force STREAM and return the next stream thunk, or nil if empty."
+(defun indigo-stream-rest (stream)
+  "Force STREAM and return the rest of the stream, or nil if empty.
+
+Example:
+  (indigo-with-molecule (mol \"CCO\")
+    (indigo-with-atoms-stream (stream mol)
+      (setq stream (indigo-stream-rest stream))
+      (indigo-stream-first stream)))  ; => second atom handle"
   (let ((forced (indigo-stream-force stream)))
     (when forced
       (cdr forced))))
-
-(defalias 'indigo-stream-next 'indigo-stream-cdr
-  "Advance STREAM by forcing and returning the next stream thunk.
-Returns nil if stream is exhausted.
-
-This is an alias for `indigo-stream-cdr'.")
 
 (defun indigo-stream-empty-p (stream)
   "Check if STREAM is empty."
@@ -124,8 +122,8 @@ This is an alias for `indigo-stream-cdr'.")
   "Map FN over elements in STREAM, returning a new lazy stream.
 
 This is a lazy implementation: FN is only called when
-accessing elements via `indigo-stream-car'
-or advancing via `indigo-stream-next'.
+accessing elements via `indigo-stream-first'
+or advancing via `indigo-stream-rest'.
 
 FN receives Indigo object handles and is responsible
 for freeing them if they are no longer needed.
@@ -135,28 +133,22 @@ Returns a new stream thunk that when forced produces:
   - (mapped-value . next-mapped-stream-thunk) cons cell
 
 Example (map symbol extraction over atoms):
-  (indigo-let* ((:molecule mol \"CCO\")
-                (:atoms atoms mol)
-                (stream (indigo-stream atoms))
-                (symbols (indigo-stream-map #\\='indigo-symbol stream)))
-    ;; symbols is now a stream of strings
-    (let ((first-sym (indigo-stream-car symbols)))
-      (message \"First symbol: %s\" first-sym)  ; => \"C\"
-      ;; Advance to next symbol
-      (setq symbols (indigo-stream-next symbols))
-      (message \"Second symbol: %s\" (indigo-stream-car symbols))))  ; => \"C\"
+  (indigo-with-molecule (mol \"CCO\")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((symbols (indigo-stream-map #\\='indigo-symbol stream)))
+        ;; symbols is now a stream of strings
+        (let ((first-sym (indigo-stream-first symbols)))
+          (message \"First symbol: %s\" first-sym)  ; => \"C\"
+          ;; Advance to rest
+          (setq symbols (indigo-stream-rest symbols))
+          (message \"Second symbol: %s\" (indigo-stream-first symbols))))))  ; => \"C\"
 
-Example with cleanup:
-  (indigo-let* ((:molecule mol \"c1ccccc1\")  ; Benzene
-                (:atoms atoms mol)
-                (stream (indigo-stream atoms))
-                (charges (indigo-stream-map
-                          (lambda (atom)
-                            (prog1 (indigo-charge atom)
-                              (indigo-free atom)))
-                          stream)))
-    ;; Stream of charge values
-    (indigo-stream-car charges))  ; => 0"
+Example (collecting charges from atoms):
+  (indigo-with-molecule (mol \"c1ccccc1\")  ; Benzene
+    (indigo-with-atoms-stream (stream mol)
+      (let ((charges (indigo-stream-map #\\='indigo-charge stream)))
+        ;; Stream of charge values
+        (indigo-stream-first charges))))  ; => 0"
   (when stream
     ;; memoized thunk
     (let ((forced nil)
@@ -175,6 +167,29 @@ Example with cleanup:
                       forced t)))))
         cached-value))))
 
+(defun indigo-stream-collect (stream)
+  "Collect all elements from STREAM into a list.
+
+Forces the entire stream and returns a list of all elements.
+STREAM is consumed in the process.
+
+Example (collecting atom symbols):
+  (indigo-with-molecule (mol \"CCO\")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((symbols (indigo-stream-map #\\='indigo-symbol stream)))
+        (indigo-stream-collect symbols))))  ; => (\"C\" \"C\" \"O\")
+
+Example (collecting charges):
+  (indigo-with-molecule (mol \"c1ccccc1\")  ; Benzene
+    (indigo-with-atoms-stream (stream mol)
+      (let ((charges (indigo-stream-map #\\='indigo-charge stream)))
+        (indigo-stream-collect charges))))  ; => (0 0 0 0 0 0)"
+  (let ((result nil))
+    (while (not (indigo-stream-empty-p stream))
+      (push (indigo-stream-first stream) result)
+      (setq stream (indigo-stream-rest stream)))
+    (nreverse result)))
+
 ;;; With-style Macro for Streams
 
 (defmacro indigo-with-stream-from-iterator (binding &rest body)
@@ -192,7 +207,7 @@ Example:
     (indigo-with-atoms-iterator (atoms mol)
       (indigo-with-stream-from-iterator (stream atoms)
         ;; Use stream here - all forced elements are freed on exit
-        (let ((first (indigo-stream-car stream)))
+        (let ((first (indigo-stream-first stream)))
           (indigo-symbol first)))))"
   (declare (indent 1))
   (let ((stream-var (car binding))

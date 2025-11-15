@@ -39,11 +39,9 @@
 ;; - Rendering and visualization (indigo-render.el)
 ;;
 ;; The package provides both low-level stateful functions that work
-;; directly with Indigo object handles, and high-level abstractions
-;; including:
-;; - `indigo-let` and `indigo-let*` macros for universal resource management
-;; - `indigo-with-*` macros for classical with-style resource management
-;;   (distributed across modules: indigo-mol, indigo-io, indigo-iterator, indigo-render)
+;; directly with Indigo object handles, and high-level `indigo-with-*`
+;; macros for automatic resource management (distributed across modules:
+;; indigo-mol, indigo-io, indigo-iterator, indigo-render).
 
 ;;; Code:
 
@@ -95,7 +93,6 @@
 (require 'indigo-render)
 (require 'indigo-mol)
 (require 'indigo-react)
-(require 'indigo-let)
 
 (provide 'indigo)
 

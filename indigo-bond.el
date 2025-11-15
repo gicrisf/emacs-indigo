@@ -58,10 +58,10 @@ Returns one of:
   nil       - Error or invalid bond
 
 Example:
-  (indigo-let* ((:molecule mol \"C=C\")
-                (:bonds bonds-iter mol)
-                (bond (indigo-next bonds-iter)))
-    (indigo-bond-order bond))
+  (indigo-with-molecule (mol \"C=C\")
+    (indigo-with-bonds-iterator (bonds-iter mol)
+      (let ((bond (indigo-next bonds-iter)))
+        (indigo-bond-order bond))))
   ;; => :double"
   (when-let ((code (indigo--bond-order-raw bond)))
     (alist-get code indigo-bond-orders)))
@@ -98,10 +98,10 @@ Returns one of:
   nil     - Error or invalid bond
 
 Example:
-  (indigo-let* ((:molecule mol \"C[C@H](O)Cl\")
-                (:bonds bonds-iter mol)
-                (bond (indigo-next bonds-iter)))
-    (indigo-bond-stereo bond))
+  (indigo-with-molecule (mol \"C[C@H](O)Cl\")
+    (indigo-with-bonds-iterator (bonds-iter mol)
+      (let ((bond (indigo-next bonds-iter)))
+        (indigo-bond-stereo bond))))
   ;; => :up or :none depending on which bond"
   (when-let ((code (indigo--bond-stereo-raw bond)))
     (alist-get code indigo-bond-stereos)))
