@@ -1,4 +1,4 @@
-;;; test-indigo-molecular.el --- Tests for Indigo molecular operations -*- lexical-binding: t; -*-
+;;; test-indigo-mol.el --- Tests for Indigo molecular operations -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
@@ -26,20 +26,15 @@
 (require 'ert)
 (require 'indigo)
 
-;; Test molecules
-(defvar test-molecules-molecular
-  '(("ethanol" . "CCO")
-    ("benzene" . "c1ccccc1")
-    ("water" . "O")
-    ("methane" . "C")
-    ("caffeine" . "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"))
-  "Test molecules for molecular operations.")
-
 ;;; Molecule loading and memory management tests
 
 (ert-deftest test-indigo-load-molecule-from-string ()
   "Test loading molecules from strings."
-  (dolist (mol test-molecules-molecular)
+  (dolist (mol '(("ethanol" . "CCO")
+                 ("benzene" . "c1ccccc1")
+                 ("water" . "O")
+                 ("methane" . "C")
+                 ("caffeine" . "CN1C=NC2=C1C(=O)N(C(=O)N2C)C")))
     (let ((handle (indigo-load-molecule-from-string (cdr mol))))
       (should (integerp handle))
       (should (> handle 0))
@@ -397,6 +392,263 @@
             ;; (message "Stateless: %.4fs, Stateful: %.4fs (%.1fx faster)"
             ;;          stateless-time stateful-time (/ stateless-time stateful-time))
             ))))))
+
+;;; With-style Macro Tests
+
+(ert-deftest test-indigo-with-molecule ()
+  "Test indigo-with-molecule macro."
+  (let ((result (indigo-with-molecule (mol "CCO")
+                  (indigo-molecular-weight mol))))
+    (should (floatp result))
+    (should (< (abs (- result 46.069)) 0.01))))
+
+(ert-deftest test-indigo-with-molecule-nested ()
+  "Test nested indigo-with-molecule macros."
+  (let ((result (indigo-with-molecule (mol1 "CCO")
+                  (indigo-with-molecule (mol2 "c1ccccc1")
+                    (list (indigo-molecular-weight mol1)
+                          (indigo-molecular-weight mol2))))))
+    (should (listp result))
+    (should (= (length result) 2))
+    (should (< (abs (- (car result) 46.069)) 0.01))
+    (should (< (abs (- (cadr result) 78.114)) 0.01))))
+
+(ert-deftest test-indigo-with-molecule-error-cleanup ()
+  "Test that indigo-with-molecule cleans up on error."
+  (should-error
+   (indigo-with-molecule (mol "CCO")
+     (error "Test error")))
+  ;; If cleanup didn't happen, subsequent operations would fail
+  (indigo-with-molecule (mol "CCO")
+    (should (integerp mol))))
+
+(ert-deftest test-indigo-with-mol-file ()
+  "Test indigo-with-mol-file macro."
+  (let ((test-file "test/data/molecules/basic/ethanol.mol"))
+    (when (file-exists-p test-file)
+      (indigo-with-mol-file (mol test-file)
+        (should (integerp mol))
+        (should (> mol 0))
+        (let ((smiles (indigo-canonical-smiles mol)))
+          (should (stringp smiles))
+          (should (string-match-p "CCO\\|OCC" smiles)))))))
+
+(ert-deftest test-indigo-with-query ()
+  "Test indigo-with-query macro."
+  (indigo-with-query (query "C=O")
+    (should (integerp query))
+    (should (> query 0))))
+
+(ert-deftest test-indigo-with-smarts ()
+  "Test indigo-with-smarts macro."
+  (indigo-with-smarts (pattern "[#6]=[#8]")
+    (should (integerp pattern))
+    (should (> pattern 0))))
+
+(ert-deftest test-indigo-with-fingerprint ()
+  "Test indigo-with-fingerprint macro."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-fingerprint (fp mol "sim")
+      (should (integerp fp))
+      (should (> fp 0)))))
+
+(ert-deftest test-indigo-with-fingerprint-similarity ()
+  "Test fingerprint similarity calculation with indigo-with-* macros."
+  (indigo-with-molecule (mol1 "CCO")
+    (indigo-with-fingerprint (fp1 mol1 "sim")
+      (indigo-with-molecule (mol2 "CCO")
+        (indigo-with-fingerprint (fp2 mol2 "sim")
+          (let ((similarity (indigo-similarity fp1 fp2 "tanimoto")))
+            (should (floatp similarity))
+            (should (> similarity 0.99))))))))
+
+(ert-deftest test-indigo-with-matcher ()
+  "Test indigo-with-matcher macro."
+  (indigo-with-molecule (mol "c1ccccc1CCO")  ; Phenylethanol
+    (indigo-with-matcher (matcher mol)
+      (should (integerp matcher))
+      (should (> matcher 0)))))
+
+;;; Normalization functions tests
+
+(ert-deftest test-indigo-normalize-basic ()
+  "Test basic molecule normalization."
+  (indigo-with-molecule (mol "[H]C([H])([H])C([H])([H])O[H]")  ; ethanol with explicit hydrogens
+    (let ((result (indigo-normalize mol)))
+      ;; (message "Normalize result: %s" result)
+      (should (eq result :changed))  ; Explicit H should be removed
+      ;; Check that normalization worked by converting back to SMILES
+      (let ((normalized-smiles (indigo-smiles mol)))
+        ;; (message "Normalized SMILES: %s" normalized-smiles)
+        (should (stringp normalized-smiles))
+        (should (string-match-p "^CCO" normalized-smiles))))))
+
+(ert-deftest test-indigo-normalize-with-options ()
+  "Test molecule normalization with options."
+  (indigo-with-molecule (mol "[H]C([H])([H])C([H])([H])O[H]")
+    (let ((result (indigo-normalize mol "")))
+      ;; (message "Normalize with empty options result: %s" result)
+      (should (eq result :changed))  ; Explicit H should be removed
+      (let ((normalized-smiles (indigo-smiles mol)))
+        ;; (message "Normalized SMILES (options test): %s" normalized-smiles)
+        (should (stringp normalized-smiles)))))
+
+  ;; Test error handling with invalid handle - should signal error
+  (should-error (indigo-normalize -1)))
+
+(ert-deftest test-indigo-standardize-basic ()
+  "Test basic molecule standardization."
+  (indigo-with-molecule (mol "[H]N([H])C([H])([H])C(=O)O[H]")  ; glycine with explicit hydrogens and ionizable groups
+    (let* ((original-smiles (indigo-smiles mol))
+           (result (indigo-standardize mol)))
+      ;; (message "Standardize result: %s" result)
+      (should (keywordp result))
+      (should (memq result '(:changed :unchanged)))
+      ;; Check that molecule is still valid after standardization
+      (let ((smiles (indigo-smiles mol)))
+        ;; (message "Standardized SMILES: %s" smiles)
+        (should (stringp smiles)))))
+
+  ;; Test error handling with invalid handle - should signal error
+  (should-error (indigo-standardize -1)))
+
+(ert-deftest test-indigo-ionize-basic ()
+  "Test basic molecule ionization."
+  (indigo-with-molecule (mol "CC(=O)O")  ; acetic acid
+    (let* ((original-smiles (indigo-smiles mol))
+           (result (indigo-ionize mol 7.0 0.1)))  ; pH 7.0 with tolerance 0.1
+      ;; (message "Ionize result (pH 7.0): %s" result)
+      (should (eq result :changed))  ; Acetic acid should be deprotonated at pH 7
+      ;; Check that molecule is still valid after ionization
+      (let ((smiles (indigo-smiles mol)))
+        ;; (message "Ionized SMILES (pH 7.0): %s" smiles)
+        (should (stringp smiles))
+        ;; Should contain negative charge for deprotonated carboxyl
+        (should (string-match-p "\\[O-\\]" smiles))))))
+
+(ert-deftest test-indigo-ionize-different-ph ()
+  "Test molecule ionization at different pH values."
+  ;; Test at acidic pH - acetic acid should remain protonated
+  (indigo-with-molecule (mol1 "CC(=O)O")
+    (let ((result1 (indigo-ionize mol1 3.0 0.1)))
+      (should (keywordp result1))
+      (should (memq result1 '(:changed :unchanged)))))
+
+  ;; Test at basic pH - acetic acid should be deprotonated
+  (indigo-with-molecule (mol2 "CC(=O)O")
+    (let ((result2 (indigo-ionize mol2 10.0 0.1)))
+      (should (eq result2 :changed))))
+
+  ;; Test error handling with invalid handle - should signal error
+  (should-error (indigo-ionize -1 7.0 0.1)))
+
+(ert-deftest test-normalization-error-handling ()
+  "Test error handling with invalid molecule handles."
+  ;; All three functions should signal errors with invalid handles
+  (should-error (indigo-normalize -1))
+  (should-error (indigo-standardize -1))
+  (should-error (indigo-ionize -1 7.0 0.1)))
+
+;;; PKA Function Tests
+
+;; FIXME
+;; The wrapper looks fine, but this is not the right way to use it
+;; (ert-deftest test-indigo-build-pka-model ()
+;;   "Test PKA model building function."
+;;   (should (fboundp 'indigo-build-pka-model))
+
+;;   ;; Test building PKA model to temporary file
+;;   (let ((temp-file (make-temp-file "indigo-pka-model" nil ".pkl")))
+;;     (message "DEBUG: Created temp file: %s" temp-file)
+;;     (unwind-protect
+;;         (let ((result (indigo-build-pka-model 0 0.0 temp-file)))
+;;           (message "DEBUG: indigo-build-pka-model returned: %s" result)
+;;           (should (integerp result))
+;;           ;; Check for Indigo errors
+;;           (let ((error-msg (indigo-get-last-error)))
+;;             (when (and error-msg (> (length error-msg) 0))
+;;               (message "DEBUG: Indigo error: %s" error-msg)))
+;;           ;; Model built successfully if result >= 0
+;;           (if (>= result 0)
+;;               (progn
+;;                 (message "DEBUG: PKA model built successfully to %s" temp-file)
+;;                 (message "DEBUG: File exists after build: %s" (file-exists-p temp-file)))
+;;             (message "DEBUG: PKA model build failed with result: %s" result)))
+;;       ;; Clean up temporary file
+;;       (when (file-exists-p temp-file)
+;;         (message "DEBUG: Cleaning up temp file: %s" temp-file)
+;;         (delete-file temp-file)))))
+
+;; TODO Refine
+;; Leaving debug messages because it works but the returned values are crazy
+;; I mean: pka 100 for everything? LMAO -- I'm surely missing something basic
+(ert-deftest test-indigo-get-acid-pka-value ()
+  "Test acid PKA value retrieval."
+  (should (fboundp 'indigo-get-acid-pka-value))
+
+  ;; Test with a simple molecule (acetic acid)
+  (let ((mol (indigo-load-molecule-from-string "CC(=O)O")))
+    (message "DEBUG: Loaded molecule handle: %s" mol)
+    (unwind-protect
+        (when (and mol (> mol 0))
+          ;; Iterate through ALL atoms in the molecule
+          (let ((atoms-iter (indigo-iterate-atoms mol))
+                (atom-index 0))
+            (unwind-protect
+                (let ((atom (indigo-next atoms-iter)))
+                  (while atom
+                    (let ((atom-symbol (indigo-symbol atom))
+                          (pka-result (indigo-get-acid-pka-value mol atom 1 0)))
+                      (message "DEBUG: Atom[%d] = %s, Acid pKa = %s"
+                               atom-index atom-symbol pka-result)
+                      ;; Check for Indigo errors
+                      (let ((error-msg (indigo-get-last-error)))
+                        (when (and error-msg (> (length error-msg) 0))
+                          (message "DEBUG: Indigo error for atom %s: %s" atom-symbol error-msg)))
+                      (should (or (floatp pka-result) (null pka-result)))
+                      (setq atom-index (1+ atom-index))
+                      (setq atom (indigo-next atoms-iter)))))
+              (when atoms-iter
+                (indigo-free atoms-iter))))
+
+          ;; Test error handling with invalid handles
+          (should (null (indigo-get-acid-pka-value -1 0 1 0))))
+      (when (and mol (> mol 0))
+        (indigo-free mol)))))
+
+(ert-deftest test-indigo-get-basic-pka-value ()
+  "Test basic PKA value retrieval."
+  (should (fboundp 'indigo-get-basic-pka-value))
+
+  ;; Test with a simple molecule (ethylamine)
+  (let ((mol (indigo-load-molecule-from-string "CCN")))
+    (message "DEBUG: Loaded molecule handle: %s" mol)
+    (unwind-protect
+        (when (and mol (> mol 0))
+          ;; Iterate through ALL atoms in the molecule
+          (let ((atoms-iter (indigo-iterate-atoms mol))
+                (atom-index 0))
+            (unwind-protect
+                (let ((atom (indigo-next atoms-iter)))
+                  (while atom
+                    (let ((atom-symbol (indigo-symbol atom))
+                          (pka-result (indigo-get-basic-pka-value mol atom 1 0)))
+                      (message "DEBUG: Atom[%d] = %s, Basic pKa = %s"
+                               atom-index atom-symbol pka-result)
+                      ;; Check for Indigo errors
+                      (let ((error-msg (indigo-get-last-error)))
+                        (when (and error-msg (> (length error-msg) 0))
+                          (message "DEBUG: Indigo error for atom %s: %s" atom-symbol error-msg)))
+                      (should (or (floatp pka-result) (null pka-result)))
+                      (setq atom-index (1+ atom-index))
+                      (setq atom (indigo-next atoms-iter)))))
+              (when atoms-iter
+                (indigo-free atoms-iter))))
+
+          ;; Test error handling with invalid handles
+          (should (null (indigo-get-basic-pka-value -1 0 1 0))))
+      (when (and mol (> mol 0))
+        (indigo-free mol)))))
 
 (provide 'test-indigo-molecular)
 

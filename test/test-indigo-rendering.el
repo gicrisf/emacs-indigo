@@ -391,5 +391,15 @@
       (indigo-free mol2)
       (indigo-free array))))
 
+;;; With-style Rendering Macro Tests
+
+(ert-deftest test-indigo-with-array ()
+  "Test indigo-with-array macro."
+  (indigo-with-array (arr)
+    (should (integerp arr))
+    (should (> arr 0))
+    (indigo-with-molecule (mol "CCO")
+      (indigo-array-add arr mol))))
+
 (provide 'test-indigo-rendering)
 ;;; test-indigo-rendering.el ends here

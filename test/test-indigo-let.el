@@ -1,27 +1,184 @@
-;;; test-indigo-sugar.el --- Tests for indigo.el high-level abstractions -*- lexical-binding: t; -*-
+;;; test-indigo-let.el --- Tests for indigo-let and indigo-let* macros -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2025 Giovanni Crisalfi
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;;; Commentary:
 
-;; Tests for high-level Lisp abstractions (indigo-let*, indigo-map-*)
-;; in indigo.el
+;; Test suite for indigo-let and indigo-let* resource management macros.
+;; Tests both parallel (indigo-let) and sequential (indigo-let*) binding semantics.
 
 ;;; Code:
 
 (require 'ert)
 (require 'indigo)
 
-;;; Iterator Helper Tests
+;;; Basic indigo-let tests (parallel binding)
 
-(ert-deftest test-indigo-map ()
-  "Test mapping over iterator with indigo-map."
-  (indigo-let* ((:molecule mol "CCO")
-                (:atoms atoms mol))
-    (let ((symbols (indigo-map #'indigo-symbol atoms)))
-      (should (equal symbols '("C" "C" "O"))))))
+(ert-deftest test-indigo-let-basic-parallel ()
+  "Test basic parallel binding with indigo-let."
+  (let ((result
+         (indigo-let ((:molecule mol1 "CCO")
+                      (:molecule mol2 "c1ccccc1"))
+           (list (indigo-count-atoms mol1)
+                 (indigo-count-atoms mol2)))))
+    (should (equal result '(3 6)))))
 
-;;; indigo-let* Macro Tests - Molecules
+(ert-deftest test-indigo-let-mixed-bindings ()
+  "Test indigo-let with mixed regular and Indigo resource bindings."
+  (let ((result
+         (indigo-let ((x 10)
+                      (:molecule mol "CCO")
+                      (y 20))
+           (list x y (indigo-count-atoms mol)))))
+    (should (equal result '(10 20 3)))))
+
+(ert-deftest test-indigo-let-automatic-cleanup ()
+  "Test that indigo-let properly cleans up resources."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-let ((:molecule mol1 "CCO")
+                 (:molecule mol2 "c1ccccc1"))
+      ;; Inside scope: 2 molecules allocated
+      (should (= (indigo-count-references) (+ initial-refs 2))))
+    ;; Outside scope: resources should be freed
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-indigo-let-cleanup-on-error ()
+  "Test that indigo-let cleans up even when body signals an error."
+  (let ((initial-refs (indigo-count-references)))
+    (should-error
+     (indigo-let ((:molecule mol "CCO"))
+       (error "Test error")))
+    ;; Resources should still be freed after error
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-indigo-let-multiple-resource-types ()
+  "Test indigo-let with different resource types in parallel."
+  (let ((result
+         (indigo-let ((:molecule mol "CCO")
+                      (:reaction rxn "CCO.CC>>CCOC")
+                      (:query query "c1ccccc1"))
+           (list (indigo-count-atoms mol)
+                 (indigo-count-heavy-atoms query)
+                 (not (null rxn))))))
+    (should (equal result '(3 6 t)))))
+
+;;; Basic indigo-let* tests (sequential binding)
+
+(ert-deftest test-indigo-let*-sequential-binding ()
+  "Test that indigo-let* allows sequential binding."
+  (let ((result
+         (indigo-let* ((:molecule mol "c1ccccc1")
+                       (:atoms atoms mol))  ; atoms references mol
+           (length (indigo-map #'indigo-symbol atoms)))))
+    (should (= result 6))))
+
+(ert-deftest test-indigo-let*-iterator-dependency ()
+  "Test indigo-let* with iterator depending on molecule."
+  (let ((symbols
+         (indigo-let* ((:molecule mol "CCO")
+                       (:atoms atoms mol))
+           (indigo-map #'indigo-symbol atoms))))
+    (should (equal symbols '("C" "C" "O")))))
+
+(ert-deftest test-indigo-let*-automatic-cleanup ()
+  "Test that indigo-let* properly cleans up resources."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-let* ((:molecule mol "CCO")
+                  (:atoms atoms mol))
+      ;; Inside scope: molecule + iterator allocated
+      (should (>= (indigo-count-references) (+ initial-refs 1))))
+    ;; Outside scope: all resources should be freed
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-indigo-let*-cleanup-on-error ()
+  "Test that indigo-let* cleans up even when body signals an error."
+  (let ((initial-refs (indigo-count-references)))
+    (should-error
+     (indigo-let* ((:molecule mol "CCO")
+                   (:atoms atoms mol))
+       (error "Test error")))
+    ;; Resources should still be freed after error
+    (should (= (indigo-count-references) initial-refs))))
+
+;;; Comparison tests: let vs let*
+
+(ert-deftest test-let-vs-let*-binding-order ()
+  "Demonstrate difference between parallel (let) and sequential (let*) binding."
+  ;; indigo-let* allows referencing earlier bindings
+  (should
+   (indigo-let* ((:molecule mol "CCO")
+                 (count (indigo-count-atoms mol)))  ; count can reference mol
+     (= count 3)))
+
+  ;; indigo-let does NOT allow referencing earlier bindings
+  ;; (This would fail at runtime because mol is not bound yet):
+  ;; (indigo-let ((:molecule mol "CCO")
+  ;;              (count (indigo-count-atoms mol)))  ; ERROR: mol not bound
+  ;;   ...)
+  )
+
+(ert-deftest test-let-parallel-evaluation ()
+  "Test that indigo-let evaluates all binding forms in parallel."
+  (let ((eval-order '()))
+    (indigo-let ((a (progn (push 'a eval-order) 1))
+                 (b (progn (push 'b eval-order) 2))
+                 (c (progn (push 'c eval-order) 3)))
+      (list a b c))
+    ;; All binding forms are evaluated before any variable is bound
+    ;; The order of evaluation is not specified, but all happen before bindings
+    (should (= (length eval-order) 3))))
+
+;;; Advanced tests
+
+(ert-deftest test-indigo-let-nested-scopes ()
+  "Test nested indigo-let scopes."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-let ((:molecule outer-mol "CCO"))
+      (should (= (indigo-count-references) (+ initial-refs 1)))
+      (indigo-let ((:molecule inner-mol "c1ccccc1"))
+        (should (= (indigo-count-references) (+ initial-refs 2))))
+      (should (= (indigo-count-references) (+ initial-refs 1))))
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-indigo-let*-multiple-dependencies ()
+  "Test indigo-let* with multiple levels of dependencies."
+  (let ((result
+         (indigo-let* ((:molecule mol "c1ccccc1C")
+                       (atom-count (indigo-count-atoms mol))
+                       (:atoms atoms mol)
+                       (symbols (indigo-map #'indigo-symbol atoms)))
+           (list atom-count (length symbols) symbols))))
+    (should (= (car result) 7))
+    (should (= (cadr result) 7))
+    (should (equal (caddr result) '("C" "C" "C" "C" "C" "C" "C")))))
+
+(ert-deftest test-indigo-let-with-errors ()
+  "Test indigo-let properly signals errors for invalid inputs (public API)."
+  (let ((initial-refs (indigo-count-references)))
+    ;; Invalid SMILES should signal an error with public API
+    (should-error
+     (indigo-let ((:molecule mol "INVALID_SMILES"))
+       (message "Should not reach here")))
+    ;; Resources should still be cleaned up after error
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-indigo-let*-with-errors ()
+  "Test indigo-let* properly signals errors for invalid inputs (public API)."
+  (let ((initial-refs (indigo-count-references)))
+    ;; Invalid SMILES should signal an error with public API
+    (should-error
+     (indigo-let* ((:molecule mol "INVALID_SMILES")
+                   (result "should not execute"))
+       (message "Should not reach here")))
+    ;; Resources should still be cleaned up after error
+    (should (= (indigo-count-references) initial-refs))))
+
+;;; Comprehensive indigo-let* tests from test-indigo-sugar.el
 
 (ert-deftest test-indigo-let*-molecule ()
   "Test indigo-let* macro with molecule binding."
@@ -47,8 +204,6 @@
                       (indigo-canonical-smiles mol))))
         (should (stringp smiles))))))
 
-;;; indigo-let* Macro Tests - Reactions
-
 (ert-deftest test-indigo-let*-reaction ()
   "Test indigo-let* with reaction binding."
   (let ((result (indigo-let* ((:reaction rxn "CCO.CC>>CCOC"))
@@ -58,15 +213,6 @@
                                     (length (indigo-map (lambda (_) t) p)))))
                     (list reactants products)))))
     (should (equal result '(2 1)))))
-
-;;; indigo-let* Macro Tests - Iterators
-
-(ert-deftest test-indigo-let*-atoms-iterator ()
-  "Test indigo-let* with atoms iterator."
-  (let ((symbols (indigo-let* ((:molecule mol "CCO")
-                               (:atoms atoms mol))
-                   (indigo-map #'indigo-symbol atoms))))
-    (should (equal symbols '("C" "C" "O")))))
 
 (ert-deftest test-indigo-let*-bonds-iterator ()
   "Test indigo-let* with bonds iterator."
@@ -89,7 +235,14 @@
                       (length (indigo-map (lambda (_) t) rings)))))
     (should (= ring-count 1))))
 
-;;; indigo-let* Macro Tests - Fingerprints
+(ert-deftest test-indigo-let*-stereocenters-iterator ()
+  "Test indigo-let* with stereocenters iterator."
+  (let ((stereocenter-count
+         (indigo-let* ((:molecule mol "C[C@H](O)CC")  ; Chiral carbon with explicit stereochemistry
+                       (:stereocenters stereos mol))
+           (length (indigo-map (lambda (_) t) stereos)))))
+    ;; Should have 1 stereocenter
+    (should (= stereocenter-count 1))))
 
 (ert-deftest test-indigo-let*-fingerprints ()
   "Test indigo-let* with fingerprint bindings."
@@ -102,8 +255,6 @@
     (should (>= sim 0.0))
     (should (<= sim 1.0))))
 
-;;; indigo-let* Macro Tests - Arrays
-
 (ert-deftest test-indigo-let*-array ()
   "Test indigo-let* with array binding."
   (let ((result (indigo-let* ((:molecule mol1 "CCO")
@@ -114,8 +265,6 @@
                   ;; indigo-count not implemented, just verify array-add succeeds
                   t)))
     (should result)))
-
-;;; indigo-let* Macro Tests - Mixed Bindings
 
 (ert-deftest test-indigo-let*-mixed-bindings ()
   "Test indigo-let* with mixed binding types."
@@ -128,8 +277,6 @@
     (should (numberp (car result)))
     (should (listp (cadr result)))
     (should (equal (cadr result) '("C" "C" "O")))))
-
-;;; Complex Workflow Tests
 
 (ert-deftest test-indigo-let*-complex-workflow ()
   "Test complex workflow with multiple Indigo resources."
@@ -155,27 +302,11 @@
     (should (equal (plist-get analysis :ethanol-atoms) '("C" "C" "O")))
     (should (= (plist-get analysis :atom-count) 3))))
 
-;;; Error Handling Tests
-
-(ert-deftest test-indigo-let*-cleanup-on-error ()
-  "Test that resources are cleaned up even when an error occurs."
-  (let ((initial-count (indigo-count-references)))
-    (should-error
-     (indigo-let* ((:molecule mol "CCO"))
-       (indigo-molecular-weight mol)
-       (error "Intentional error")))
-    ;; If we get here without leaking memory, cleanup worked
-    ;; Reference count should be back to what it was before
-    (should (= (indigo-count-references) initial-count))))
-
 (ert-deftest test-indigo-let*-invalid-molecule ()
-  "Test indigo-let* with invalid molecule string."
-  (let ((mol (indigo-let* ((:molecule mol "INVALID"))
-               mol)))
-    ;; Invalid molecules return -1 (error handle)
-    (should (or (null mol) (= mol -1)))))
-
-;;; Macro Expansion Test
+  "Test indigo-let* with invalid molecule string signals error."
+  (should-error
+   (indigo-let* ((:molecule mol "INVALID"))
+     mol)))
 
 (ert-deftest test-indigo-let*-macro-expansion ()
   "Show the macro expansion of indigo-let* for debugging."
@@ -187,8 +318,6 @@
     (princ (format "DEBUG:\n%S\n" expansion))
     ;; Just verify it expands to a let form (nested structure)
     (should (eq (car expansion) 'let))))
-
-;;; Additional Tests Inspired by Molecular Operations
 
 (ert-deftest test-indigo-let*-format-conversions ()
   "Test format conversion operations with indigo-let*."
@@ -323,5 +452,6 @@
     (should (= (length conversions) 4))
     (should (cl-every #'stringp conversions))))
 
-(provide 'test-indigo-sugar)
-;;; test-indigo-sugar.el ends here
+(provide 'test-indigo-let)
+
+;;; test-indigo-let.el ends here

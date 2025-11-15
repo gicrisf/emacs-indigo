@@ -359,12 +359,12 @@
 
 (ert-deftest test-indigo-iterator-error-handling ()
   "Test iterator error handling with invalid inputs."
-  ;; Test with invalid molecule handle
-  (should (null (indigo-iterate-atoms -1)))
-  (should (null (indigo-iterate-bonds -1)))
-  (should (null (indigo-iterate-sssr -1)))
-  
-  ;; Test next with invalid iterator
+  ;; Test with invalid molecule handle - should signal errors
+  (should-error (indigo-iterate-atoms -1))
+  (should-error (indigo-iterate-bonds -1))
+  (should-error (indigo-iterate-sssr -1))
+
+  ;; Test next with invalid iterator - returns nil (exhausted state)
   (should (null (indigo-next -1)))
   
   ;; Test with invalid parameters
@@ -427,4 +427,161 @@
             (indigo-free rings-iter)))
       (indigo-free mol))))
 
-(provide 'test-indigo-iterators)
+;;; Iterator Helper Tests
+
+(ert-deftest test-indigo-map ()
+  "Test mapping over iterator with indigo-map."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-iterator (atoms mol)
+      (let ((symbols (indigo-map #'indigo-symbol atoms)))
+        (should (equal symbols '("C" "C" "O")))))))
+
+;;; With-style Iterator Macro Tests
+
+(ert-deftest test-indigo-with-atoms ()
+  "Test indigo-with-atoms-iterator macro."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-iterator (atoms mol)
+      (should (integerp atoms))
+      (should (> atoms 0))
+      ;; Test iteration
+      (let ((count 0))
+        (while (indigo-next atoms)
+          (setq count (1+ count)))
+        (should (= count 3))))))
+
+(ert-deftest test-indigo-with-bonds ()
+  "Test indigo-with-bonds-iterator macro."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-bonds-iterator (bonds mol)
+      (should (integerp bonds))
+      (should (> bonds 0))
+      ;; Test iteration
+      (let ((count 0))
+        (while (indigo-next bonds)
+          (setq count (1+ count)))
+        (should (= count 2))))))
+
+(ert-deftest test-indigo-with-neighbors ()
+  "Test indigo-with-neighbors-iterator macro."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-iterator (atoms mol)
+      (let ((first-atom (indigo-next atoms)))
+        (when first-atom
+          (indigo-with-neighbors-iterator (neighbors first-atom)
+            (should (integerp neighbors))
+            (should (> neighbors 0))
+            ;; First carbon in CCO has 1 neighbor (the other carbon)
+            (let ((count 0))
+              (while (indigo-next neighbors)
+                (setq count (1+ count)))
+              (should (= count 1))))
+          (indigo-free first-atom))))))
+
+(ert-deftest test-indigo-with-components ()
+  "Test indigo-with-components-iterator macro."
+  (indigo-with-molecule (mol "CCO.CC")  ; Two components
+    (indigo-with-components-iterator (components mol)
+      (should (integerp components))
+      (should (> components 0))
+      (let ((count 0))
+        (while (indigo-next components)
+          (setq count (1+ count)))
+        (should (= count 2))))))
+
+(ert-deftest test-indigo-with-sssr ()
+  "Test indigo-with-sssr-iterator macro."
+  (indigo-with-molecule (mol "c1ccccc1")  ; Benzene
+    (indigo-with-sssr-iterator (rings mol)
+      (should (integerp rings))
+      (should (> rings 0))
+      (let ((count 0))
+        (while (indigo-next rings)
+          (setq count (1+ count)))
+        (should (= count 1))))))
+
+(ert-deftest test-indigo-with-rings ()
+  "Test indigo-with-rings-iterator macro with size range."
+  (indigo-with-molecule (mol "c1ccc2ccccc2c1")  ; Naphthalene
+    (indigo-with-rings-iterator (rings mol 5 7)
+      (should (integerp rings))
+      (should (> rings 0))
+      ;; Naphthalene has rings of size 6
+      (let ((count 0))
+        (while (indigo-next rings)
+          (setq count (1+ count)))
+        (should (> count 0))))))
+
+(ert-deftest test-indigo-with-subtrees ()
+  "Test indigo-with-subtrees-iterator macro."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-subtrees-iterator (subtrees mol 1 3)
+      (should (integerp subtrees))
+      (should (> subtrees 0))
+      (let ((count 0))
+        (while (indigo-next subtrees)
+          (setq count (1+ count)))
+        (should (> count 0))))))
+
+(ert-deftest test-indigo-with-stereocenters ()
+  "Test indigo-with-stereocenters-iterator macro."
+  (indigo-with-molecule (mol "C[C@H](O)CC")
+    (indigo-with-stereocenters-iterator (stereos mol)
+      (should (integerp stereos))
+      (should (> stereos 0))
+      (let ((count 0))
+        (while (indigo-next stereos)
+          (setq count (1+ count)))
+        (should (= count 1))))))
+
+(ert-deftest test-indigo-with-reactants ()
+  "Test indigo-with-reactants-iterator macro."
+  (indigo-with-reaction (rxn "CCO.CC>>CCOC")
+    (indigo-with-reactants-iterator (reactants rxn)
+      (should (integerp reactants))
+      (should (> reactants 0))
+      (let ((count 0))
+        (while (indigo-next reactants)
+          (setq count (1+ count)))
+        (should (= count 2))))))
+
+(ert-deftest test-indigo-with-products ()
+  "Test indigo-with-products-iterator macro."
+  (indigo-with-reaction (rxn "CCO.CC>>CCOC")
+    (indigo-with-products-iterator (products rxn)
+      (should (integerp products))
+      (should (> products 0))
+      (let ((count 0))
+        (while (indigo-next products)
+          (setq count (1+ count)))
+        (should (= count 1))))))
+
+(ert-deftest test-indigo-with-nested-iterators ()
+  "Test nested molecule and atom iterators."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-iterator (atoms mol)
+      (let ((symbols '())
+            (atom (indigo-next atoms)))
+        (while atom
+          (push (indigo-symbol atom) symbols)
+          (indigo-free atom)
+          (setq atom (indigo-next atoms)))
+        (should (equal (reverse symbols) '("C" "C" "O")))))))
+
+(ert-deftest test-indigo-with-stream-integration ()
+  "Test indigo-with-* macros with lazy streams."
+  (indigo-with-molecule (mol "c1ccccc1")  ; Benzene
+    (indigo-with-atoms-iterator (atoms mol)
+      (let* ((stream (indigo-stream atoms))
+             (symbols '()))
+        (while (not (indigo-stream-empty-p stream))
+          (let ((atom (indigo-stream-car stream)))
+            (push (indigo-symbol atom) symbols)
+            (indigo-free atom)
+            (setq stream (indigo-stream-next stream))))
+        (should (= (length symbols) 6))
+        (should (cl-every (lambda (s) (equal s "C")) symbols))))))
+
+(provide 'test-indigo-iter)
+
+;;; test-indigo-iter.el ends here

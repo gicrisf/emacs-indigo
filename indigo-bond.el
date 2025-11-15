@@ -16,7 +16,6 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;; Author: Giovanni Crisalfi
-;; Keywords: data
 
 ;;; Commentary:
 
@@ -27,6 +26,8 @@
 ;;; Forward declarations for C module raw functions
 (declare-function indigo--bond-order-raw "indigo-module")
 (declare-function indigo--bond-stereo-raw "indigo-module")
+(declare-function indigo-source "indigo-module")
+(declare-function indigo-destination "indigo-module")
 
 ;;; Bond Order Mappings
 
