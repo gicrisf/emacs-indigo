@@ -116,6 +116,22 @@ emacs_value Findigo_count_heavy_atoms(emacs_env *env, ptrdiff_t nargs, emacs_val
     return op_indigo_count_heavy_atoms(env, mol);
 }
 
+/* Atom properties */
+emacs_value Findigo_index(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    return op_indigo_index(env, item);
+}
+
+emacs_value Findigo_charge(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int atom = env->extract_integer(env, args[0]);
+    return op_indigo_charge(env, atom);
+}
+
+emacs_value Findigo_xyz(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int atom = env->extract_integer(env, args[0]);
+    return op_indigo_xyz(env, atom);
+}
+
 /* Boolean properties */
 emacs_value Findigo_is_chiral(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
     int mol = env->extract_integer(env, args[0]);
@@ -130,6 +146,27 @@ emacs_value Findigo_has_coordinates(emacs_env *env, ptrdiff_t nargs, emacs_value
 emacs_value Findigo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
     int mol = env->extract_integer(env, args[0]);
     return op_indigo_has_z_coord(env, mol);
+}
+
+/* Bond property functions */
+emacs_value Findigo_source(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int bond = env->extract_integer(env, args[0]);
+    return op_indigo_source(env, bond);
+}
+
+emacs_value Findigo_destination(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int bond = env->extract_integer(env, args[0]);
+    return op_indigo_destination(env, bond);
+}
+
+emacs_value Findigo_bond_order(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int bond = env->extract_integer(env, args[0]);
+    return op_indigo_bond_order(env, bond);
+}
+
+emacs_value Findigo_bond_stereo(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int bond = env->extract_integer(env, args[0]);
+    return op_indigo_bond_stereo(env, bond);
 }
 
 /* Matching functions */
