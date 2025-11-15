@@ -250,7 +250,7 @@
                            (:molecule mol2 "CO")
                            (:fingerprint fp1 mol1 "sim")
                            (:fingerprint fp2 mol2 "sim"))
-               (indigo-similarity fp1 fp2 "tanimoto"))))
+               (indigo-similarity fp1 fp2))))
     (should (numberp sim))
     (should (>= sim 0.0))
     (should (<= sim 1.0))))
@@ -292,7 +292,7 @@
            (list
             :ethanol-weight (indigo-molecular-weight ethanol)
             :methanol-weight (indigo-molecular-weight methanol)
-            :similarity (indigo-similarity eth-fp met-fp "tanimoto")
+            :similarity (indigo-similarity eth-fp met-fp)
             :ethanol-atoms ethanol-atoms-list
             :atom-count atom-count))))
 

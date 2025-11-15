@@ -44,6 +44,7 @@
 ;; Search
 (declare-function indigo--fingerprint "indigo-module")
 (declare-function indigo--substructure-matcher "indigo-module")
+(declare-function indigo--similarity "indigo-module")
 
 (defun indigo-fingerprint (object type)
   "Generate fingerprint of TYPE for OBJECT.
@@ -53,6 +54,41 @@ Signals an error if fingerprint generation fails."
     (if (and handle (> handle 0))
         handle
       (error "Failed to generate fingerprint: %s" (indigo-get-last-error)))))
+
+(defun indigo-similarity (fp1 fp2 &optional metric &rest params)
+  "Calculate similarity between fingerprints FP1 and FP2 using METRIC.
+
+METRIC is an optional keyword specifying the similarity metric. If omitted,
+defaults to :tanimoto. Can be followed by numeric PARAMS for metrics that
+support them:
+
+Simple metrics:
+  :tanimoto        - Tanimoto coefficient (Jaccard index) [default]
+  :euclid-sub      - Euclidean distance for substructure fingerprints
+  :normalized-edit - Normalized edit distance
+
+Tversky metric with optional parameters:
+  :tversky              - Tversky similarity with default weights
+  :tversky ALPHA BETA   - Tversky with custom weights
+    ALPHA - Weight for query fingerprint bits (float, typically 0.0-1.0)
+    BETA  - Weight for target fingerprint bits (float, typically 0.0-1.0)
+    Example: :tversky 0.7 0.3 emphasizes query over target
+
+Returns a float between 0.0 and 1.0 representing the similarity score.
+
+Examples:
+  (indigo-similarity fp1 fp2)                ; Uses :tanimoto (default)
+  (indigo-similarity fp1 fp2 :tanimoto)
+  (indigo-similarity fp1 fp2 :tversky)
+  (indigo-similarity fp1 fp2 :tversky 0.7 0.3)"
+  (unless metric
+    (setq metric :tanimoto))
+  (unless (keywordp metric)
+    (error "METRIC must be a keyword, got: %S" metric))
+  (let ((metrics-str (concat (substring (symbol-name metric) 1)
+                             (when params
+                               (concat " " (mapconcat #'number-to-string params " "))))))
+    (indigo--similarity fp1 fp2 metrics-str)))
 
 (defun indigo-substructure-matcher (target)
   "Create a substructure matcher for TARGET molecule.

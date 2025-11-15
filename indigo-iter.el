@@ -87,7 +87,8 @@ Signals an error if iterator creation fails."
       (error "Failed to create SSSR iterator: %s" (indigo-get-last-error)))))
 
 (defun indigo-iterate-rings (molecule min-atoms max-atoms)
-  "Create an iterator over rings in MOLECULE with atom count in range [MIN-ATOMS, MAX-ATOMS].
+  "Create an iterator over rings in MOLECULE.
+Atom count range is [MIN-ATOMS, MAX-ATOMS].
 Signals an error if iterator creation fails."
   (let ((handle (indigo--iterate-rings molecule min-atoms max-atoms)))
     (if (and handle (> handle 0))
@@ -95,7 +96,8 @@ Signals an error if iterator creation fails."
       (error "Failed to create rings iterator: %s" (indigo-get-last-error)))))
 
 (defun indigo-iterate-subtrees (molecule min-atoms max-atoms)
-  "Create an iterator over subtrees in MOLECULE with atom count in range [MIN-ATOMS, MAX-ATOMS].
+  "Create an iterator over subtrees in MOLECULE.
+Atom count range is [MIN-ATOMS, MAX-ATOMS].
 Signals an error if iterator creation fails."
   (let ((handle (indigo--iterate-subtrees molecule min-atoms max-atoms)))
     (if (and handle (> handle 0))
@@ -145,13 +147,8 @@ Each item is freed after FUNC is applied to it."
 
 (defmacro indigo-with-atoms-iterator (binding &rest body)
   "Create atom iterator with automatic cleanup.
-
-Usage: (indigo-with-atoms (VAR MOL-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"CCO\")
-    (indigo-with-atoms (atoms mol)
-      (indigo-stream atoms)))"
+BINDING is (VAR MOL-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding)))
@@ -162,13 +159,8 @@ Example:
 
 (defmacro indigo-with-bonds-iterator (binding &rest body)
   "Create bond iterator with automatic cleanup.
-
-Usage: (indigo-with-bonds (VAR MOL-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"CCO\")
-    (indigo-with-bonds (bonds mol)
-      (indigo-stream bonds)))"
+BINDING is (VAR MOL-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding)))
@@ -179,14 +171,8 @@ Example:
 
 (defmacro indigo-with-neighbors-iterator (binding &rest body)
   "Create neighbor iterator with automatic cleanup.
-
-Usage: (indigo-with-neighbors (VAR ATOM-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"CCO\")
-    (let ((atom (indigo-get-atom mol 0)))
-      (indigo-with-neighbors (neighbors atom)
-        (indigo-stream neighbors))))"
+BINDING is (VAR ATOM-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (atom-var (cadr binding)))
@@ -197,13 +183,8 @@ Example:
 
 (defmacro indigo-with-components-iterator (binding &rest body)
   "Create component iterator with automatic cleanup.
-
-Usage: (indigo-with-components (VAR MOL-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"CCO.CC\")
-    (indigo-with-components (components mol)
-      (indigo-stream components)))"
+BINDING is (VAR MOL-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding)))
@@ -214,13 +195,8 @@ Example:
 
 (defmacro indigo-with-sssr-iterator (binding &rest body)
   "Create SSSR ring iterator with automatic cleanup.
-
-Usage: (indigo-with-sssr (VAR MOL-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"c1ccccc1\")
-    (indigo-with-sssr (rings mol)
-      (indigo-stream rings)))"
+BINDING is (VAR MOL-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding)))
@@ -231,13 +207,8 @@ Example:
 
 (defmacro indigo-with-rings-iterator (binding &rest body)
   "Create ring iterator with size range and automatic cleanup.
-
-Usage: (indigo-with-rings (VAR MOL-VAR MIN MAX) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"c1ccc2ccccc2c1\")
-    (indigo-with-rings (rings mol 5 7)
-      (indigo-stream rings)))"
+BINDING is (VAR MOL-VAR MIN MAX) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding))
@@ -250,13 +221,8 @@ Example:
 
 (defmacro indigo-with-subtrees-iterator (binding &rest body)
   "Create subtree iterator with size range and automatic cleanup.
-
-Usage: (indigo-with-subtrees (VAR MOL-VAR MIN MAX) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"CCO\")
-    (indigo-with-subtrees (subtrees mol 1 3)
-      (indigo-stream subtrees)))"
+BINDING is (VAR MOL-VAR MIN MAX) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding))
@@ -269,13 +235,8 @@ Example:
 
 (defmacro indigo-with-stereocenters-iterator (binding &rest body)
   "Create stereocenter iterator with automatic cleanup.
-
-Usage: (indigo-with-stereocenters (VAR MOL-VAR) BODY...)
-
-Example:
-  (indigo-with-molecule (mol \"C[C@H](O)CC\")
-    (indigo-with-stereocenters (stereos mol)
-      (indigo-stream stereos)))"
+BINDING is (VAR MOL-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (mol-var (cadr binding)))
@@ -286,13 +247,8 @@ Example:
 
 (defmacro indigo-with-reactants-iterator (binding &rest body)
   "Create reactant iterator with automatic cleanup.
-
-Usage: (indigo-with-reactants (VAR RXN-VAR) BODY...)
-
-Example:
-  (indigo-with-reaction (rxn \"CCO+CC>>CCOCC\")
-    (indigo-with-reactants (reactants rxn)
-      (indigo-stream reactants)))"
+BINDING is (VAR RXN-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (rxn-var (cadr binding)))
@@ -303,13 +259,8 @@ Example:
 
 (defmacro indigo-with-products-iterator (binding &rest body)
   "Create product iterator with automatic cleanup.
-
-Usage: (indigo-with-products (VAR RXN-VAR) BODY...)
-
-Example:
-  (indigo-with-reaction (rxn \"CCO+CC>>CCOCC\")
-    (indigo-with-products (products rxn)
-      (indigo-stream products)))"
+BINDING is (VAR RXN-VAR) where VAR is bound to the iterator handle.
+BODY is executed with the iterator, which is freed on exit."
   (declare (indent 1))
   (let ((var (car binding))
         (rxn-var (cadr binding)))

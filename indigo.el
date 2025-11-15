@@ -60,10 +60,6 @@
 (declare-function indigo-clone "indigo-module")
 (declare-function indigo-get-last-error "indigo-module")
 
-;; Bond property functions
-(declare-function indigo-source "indigo-module")
-(declare-function indigo-destination "indigo-module")
-
 ;;; Module Loading
 
 ;; Load the compiled module

@@ -72,7 +72,7 @@
                        (:molecule mol2 "CC(O)C")   ; Isopropanol
                        (:fingerprint fp1 mol1 "sim")
                        (:fingerprint fp2 mol2 "sim"))
-           (indigo-similarity fp1 fp2 "tanimoto"))))
+           (indigo-similarity fp1 fp2 :tanimoto))))
     (should (floatp result))
     (should (>= result 0.0))
     (should (<= result 1.0))
