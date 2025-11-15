@@ -20,8 +20,6 @@ Emacs Lisp bindings for the [Indigo](https://lifescience.opensource.epam.com/ind
 
 ## Implementation Status
 
-**Version 0.8.0**
-
 **Most features are implemented and tested** (400+ tests), with core operations complete. Particularly, we have complete molecular operations, a full iterator system for structure traversal, lazy stream abstraction with functional combinators, rendering and visualization support, and automatic resource management with intuitive `indigo-with-*` macros.
 
 Areas still in development include advanced analysis features (scaffold detection, R-group deconvolution), SDF/RDF file iteration, and additional array/writer operations.
