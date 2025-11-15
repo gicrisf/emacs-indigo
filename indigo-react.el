@@ -109,9 +109,9 @@ Returns an iterator handle that can be used with iterator functions.
 Signals an error if iterator creation fails.
 
 Example:
-  (indigo-let* ((:reaction rxn \"CC>>CCO\")
-                (:reactants reactants rxn))
-    (indigo-count reactants))
+  (indigo-with-reaction (rxn \"CC>>CCO\")
+    (indigo-with-reactants-iterator (reactants rxn)
+      (indigo-count reactants)))
   ;; => 1"
   (let ((handle (indigo--iterate-reactants reaction)))
     (if (and handle (> handle 0))
@@ -124,9 +124,9 @@ Returns an iterator handle that can be used with iterator functions.
 Signals an error if iterator creation fails.
 
 Example:
-  (indigo-let* ((:reaction rxn \"CC>>CCO\")
-                (:products products rxn))
-    (indigo-count products))
+  (indigo-with-reaction (rxn \"CC>>CCO\")
+    (indigo-with-products-iterator (products rxn)
+      (indigo-count products)))
   ;; => 1"
   (let ((handle (indigo--iterate-products reaction)))
     (if (and handle (> handle 0))

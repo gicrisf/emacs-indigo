@@ -679,6 +679,440 @@
       (when (and mol (> mol 0))
         (indigo-free mol)))))
 
+;;; Sequential Multiple Binding Macro Tests
+
+(ert-deftest test-indigo-with-molecule* ()
+  "Test indigo-with-molecule* macro with multiple bindings."
+  (let ((result (indigo-with-molecule* ((mol1 "CCO")
+                                        (mol2 "c1ccccc1"))
+                  (list (indigo-molecular-weight mol1)
+                        (indigo-molecular-weight mol2)))))
+    (should (listp result))
+    (should (= (length result) 2))
+    (should (< (abs (- (car result) 46.069)) 0.01))
+    (should (< (abs (- (cadr result) 78.114)) 0.01))))
+
+(ert-deftest test-indigo-with-molecule*-cleanup ()
+  "Test that indigo-with-molecule* properly cleans up all molecules."
+  (should-error
+   (indigo-with-molecule* ((mol1 "CCO")
+                           (mol2 "c1ccccc1")
+                           (mol3 "CCC"))
+     (error "Test error")))
+  ;; If cleanup didn't happen, subsequent operations would fail
+  (indigo-with-molecule* ((mol1 "CCO")
+                          (mol2 "c1ccccc1"))
+    (should (integerp mol1))
+    (should (integerp mol2))))
+
+(ert-deftest test-indigo-with-molecule*-similarity ()
+  "Test comparing fingerprints with plural macros."
+  (indigo-with-molecule* ((mol1 "CCO")
+                          (mol2 "c1ccccc1"))
+    (indigo-with-fingerprint* ((fp1 mol1 "sim")
+                               (fp2 mol2 "sim"))
+      (let ((similarity (indigo-similarity fp1 fp2)))
+        (should (floatp similarity))
+        (should (>= similarity 0.0))
+        (should (<= similarity 1.0))))))
+
+(ert-deftest test-indigo-with-mol-file* ()
+  "Test indigo-with-mol-file* macro with multiple files."
+  (let ((file1 "test/data/molecules/basic/ethanol.mol")
+        (file2 "test/data/molecules/basic/benzene.mol"))
+    (when (and (file-exists-p file1) (file-exists-p file2))
+      (indigo-with-mol-file* ((mol1 file1)
+                              (mol2 file2))
+        (should (integerp mol1))
+        (should (> mol1 0))
+        (should (integerp mol2))
+        (should (> mol2 0))
+        (let ((smiles1 (indigo-canonical-smiles mol1))
+              (smiles2 (indigo-canonical-smiles mol2)))
+          (should (stringp smiles1))
+          (should (stringp smiles2)))))))
+
+(ert-deftest test-indigo-with-query* ()
+  "Test indigo-with-query* macro with multiple query molecules."
+  (indigo-with-query* ((query1 "C=O")
+                        (query2 "C#N"))
+    (should (integerp query1))
+    (should (> query1 0))
+    (should (integerp query2))
+    (should (> query2 0))
+    (let ((smiles1 (indigo-smiles query1))
+          (smiles2 (indigo-smiles query2)))
+      (should (stringp smiles1))
+      (should (stringp smiles2)))))
+
+(ert-deftest test-indigo-with-query-file* ()
+  "Test indigo-with-query-file* macro with multiple query files."
+  (let ((file1 "test/data/queries/query1.mol")
+        (file2 "test/data/queries/query2.mol"))
+    ;; Only run if test files exist
+    (when (and (file-exists-p file1) (file-exists-p file2))
+      (indigo-with-query-file* ((query1 file1)
+                                (query2 file2))
+        (should (integerp query1))
+        (should (> query1 0))
+        (should (integerp query2))
+        (should (> query2 0))))))
+
+(ert-deftest test-indigo-with-smarts* ()
+  "Test indigo-with-smarts* macro with multiple SMARTS patterns."
+  (indigo-with-smarts* ((pattern1 "[#6]=[#8]")
+                                (pattern2 "[#7]"))
+    (should (integerp pattern1))
+    (should (> pattern1 0))
+    (should (integerp pattern2))
+    (should (> pattern2 0))
+    (let ((smiles1 (indigo-smiles pattern1))
+          (smiles2 (indigo-smiles pattern2)))
+      (should (stringp smiles1))
+      (should (stringp smiles2)))))
+
+(ert-deftest test-indigo-with-fingerprint* ()
+  "Test indigo-with-fingerprint* macro with multiple fingerprints."
+  (indigo-with-molecule* ((mol1 "CCO")
+                          (mol2 "c1ccccc1")
+                          (mol3 "CCC"))
+    (indigo-with-fingerprint* ((fp1 mol1 "sim")
+                               (fp2 mol2 "sim")
+                               (fp3 mol3 "sim"))
+      (should (integerp fp1))
+      (should (> fp1 0))
+      (should (integerp fp2))
+      (should (> fp2 0))
+      (should (integerp fp3))
+      (should (> fp3 0))
+      ;; Test similarity calculations
+      (let ((sim12 (indigo-similarity fp1 fp2))
+            (sim13 (indigo-similarity fp1 fp3)))
+        (should (floatp sim12))
+        (should (floatp sim13))
+        ;; CCO and CCC should be more similar than CCO and benzene
+        (should (> sim13 sim12))))))
+
+(ert-deftest test-indigo-with-matcher* ()
+  "Test indigo-with-matcher* macro with multiple matchers."
+  (indigo-with-molecule* ((mol1 "c1ccccc1CCO")  ; Phenylethanol
+                          (mol2 "CCN"))          ; Ethylamine
+    (indigo-with-matcher* ((matcher1 mol1)
+                           (matcher2 mol2))
+      (should (integerp matcher1))
+      (should (> matcher1 0))
+      (should (integerp matcher2))
+      (should (> matcher2 0)))))
+
+(ert-deftest test-plural-macros-vs-nested-singular ()
+  "Compare plural macros with nested singular macros for equivalence."
+  ;; Test with plural macros
+  (let ((result-plural
+         (indigo-with-molecule* ((mol1 "CCO")
+                                 (mol2 "c1ccccc1"))
+           (list (indigo-molecular-weight mol1)
+                 (indigo-molecular-weight mol2)))))
+
+    ;; Test with nested singular macros
+    (let ((result-nested
+           (indigo-with-molecule (mol1 "CCO")
+             (indigo-with-molecule (mol2 "c1ccccc1")
+               (list (indigo-molecular-weight mol1)
+                     (indigo-molecular-weight mol2))))))
+
+      ;; Both should produce the same results
+      (should (= (length result-plural) (length result-nested)))
+      (should (< (abs (- (car result-plural) (car result-nested))) 0.001))
+      (should (< (abs (- (cadr result-plural) (cadr result-nested))) 0.001)))))
+
+(ert-deftest test-molecule*-sequential-evaluation ()
+  "Test that indigo-with-molecule* evaluates bindings sequentially."
+  ;; All molecules should be created and valid
+  (let ((created-mols nil))
+    (condition-case err
+        (indigo-with-molecule* ((mol1 "CCO")
+                                (mol2 "c1ccccc1")
+                                (mol3 "CCC"))
+          ;; All three molecules should be valid at this point
+          (setq created-mols (list mol1 mol2 mol3))
+          (should (integerp mol1))
+          (should (integerp mol2))
+          (should (integerp mol3))
+          (should (> mol1 0))
+          (should (> mol2 0))
+          (should (> mol3 0))
+          ;; Force an error to test cleanup
+          (error "Test error"))
+      (error
+       ;; Error expected - verify molecules were created
+       (should created-mols)
+       (should (= (length created-mols) 3))))))
+
+;;; Resource Cleanup Tests
+
+(ert-deftest test-with-molecule-automatic-cleanup ()
+  "Test that indigo-with-molecule properly cleans up resources."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-with-molecule (mol "CCO")
+      ;; Inside scope: 1 molecule allocated
+      (should (= (indigo-count-references) (+ initial-refs 1))))
+    ;; Outside scope: resources should be freed
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-with-molecule*-automatic-cleanup ()
+  "Test that indigo-with-molecule* properly cleans up multiple resources."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-with-molecule* ((mol1 "CCO")
+                            (mol2 "c1ccccc1"))
+      ;; Inside scope: 2 molecules allocated
+      (should (= (indigo-count-references) (+ initial-refs 2))))
+    ;; Outside scope: all resources should be freed
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-with-molecule-iterator-cleanup ()
+  "Test cleanup with nested molecule and iterator macros."
+  (let ((initial-refs (indigo-count-references)))
+    (indigo-with-molecule (mol "CCO")
+      (indigo-with-atoms-iterator (atoms mol)
+        ;; Inside scope: molecule + iterator allocated
+        (should (>= (indigo-count-references) (+ initial-refs 1)))))
+    ;; Outside scope: all resources should be freed
+    (should (= (indigo-count-references) initial-refs))))
+
+;;; Error Handling Tests
+
+(ert-deftest test-with-molecule-invalid-smiles ()
+  "Test that indigo-with-molecule signals error for invalid SMILES."
+  (let ((initial-refs (indigo-count-references)))
+    (should-error
+     (indigo-with-molecule (mol "INVALID_SMILES")
+       (message "Should not reach here")))
+    ;; Resources should still be cleaned up after error
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-with-molecule*-invalid-smiles ()
+  "Test that indigo-with-molecule* properly cleans up when later molecule fails."
+  (let ((initial-refs (indigo-count-references)))
+    (should-error
+     (indigo-with-molecule* ((mol1 "CCO")
+                             (mol2 "INVALID_SMILES"))
+       (message "Should not reach here")))
+    ;; With sequential nesting, mol1 should be cleaned up even when mol2 fails
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-with-molecule-error-in-body ()
+  "Test cleanup when error occurs in macro body."
+  (let ((initial-refs (indigo-count-references)))
+    (should-error
+     (indigo-with-molecule (mol "CCO")
+       (error "Test error in body")))
+    ;; Resources should still be cleaned up
+    (should (= (indigo-count-references) initial-refs))))
+
+;;; Iterator Dependency Tests
+
+(ert-deftest test-with-atoms-iterator-dependency ()
+  "Test atoms iterator depending on molecule."
+  (let ((symbols
+         (indigo-with-molecule (mol "CCO")
+           (indigo-with-atoms-iterator (atoms mol)
+             (indigo-map #'indigo-symbol atoms)))))
+    (should (equal symbols '("C" "C" "O")))))
+
+(ert-deftest test-with-bonds-iterator-dependency ()
+  "Test bonds iterator depending on molecule."
+  (let ((bond-count
+         (indigo-with-molecule (mol "CCO")
+           (indigo-with-bonds-iterator (bonds mol)
+             (length (indigo-map (lambda (_) t) bonds))))))
+    (should (= bond-count 2))))
+
+(ert-deftest test-with-components-iterator-dependency ()
+  "Test components iterator with multi-component molecule."
+  (let ((comp-count
+         (indigo-with-molecule (mol "CCO.CC")
+           (indigo-with-components-iterator (comps mol)
+             (length (indigo-map (lambda (_) t) comps))))))
+    (should (= comp-count 2))))
+
+(ert-deftest test-with-sssr-iterator-dependency ()
+  "Test SSSR iterator depending on molecule."
+  (let ((ring-count
+         (indigo-with-molecule (mol "c1ccccc1")
+           (indigo-with-sssr-iterator (rings mol)
+             (length (indigo-map (lambda (_) t) rings))))))
+    (should (= ring-count 1))))
+
+(ert-deftest test-with-stereocenters-iterator-dependency ()
+  "Test stereocenters iterator depending on molecule."
+  (let ((stereocenter-count
+         (indigo-with-molecule (mol "C[C@H](O)CC")
+           (indigo-with-stereocenters-iterator (stereos mol)
+             (length (indigo-map (lambda (_) t) stereos))))))
+    (should (= stereocenter-count 1))))
+
+;;; Complex Workflow Tests
+
+(ert-deftest test-with-macros-complex-workflow ()
+  "Test complex workflow with multiple resources and calculations."
+  (let ((analysis
+         (indigo-with-molecule* ((ethanol "CCO")
+                                 (methanol "CO"))
+           (indigo-with-fingerprint* ((eth-fp ethanol "sim")
+                                      (met-fp methanol "sim"))
+             (indigo-with-atoms-iterator (eth-atoms ethanol)
+               (let ((ethanol-atoms-list (indigo-map #'indigo-symbol eth-atoms)))
+                 (indigo-with-atoms-iterator (eth-atoms2 ethanol)
+                   (let ((atom-count (length (indigo-map #'indigo-symbol eth-atoms2))))
+                     (list
+                      :ethanol-weight (indigo-molecular-weight ethanol)
+                      :methanol-weight (indigo-molecular-weight methanol)
+                      :similarity (indigo-similarity eth-fp met-fp)
+                      :ethanol-atoms ethanol-atoms-list
+                      :atom-count atom-count)))))))))
+
+    (should (plist-get analysis :ethanol-weight))
+    (should (plist-get analysis :methanol-weight))
+    (should (numberp (plist-get analysis :similarity)))
+    (should (equal (plist-get analysis :ethanol-atoms) '("C" "C" "O")))
+    (should (= (plist-get analysis :atom-count) 3))))
+
+(ert-deftest test-with-molecule-clone-operation ()
+  "Test molecule cloning with with- macros."
+  (indigo-with-molecule (mol "CCO")
+    (let ((cloned (indigo-clone mol)))
+      (unwind-protect
+          (progn
+            (should (integerp cloned))
+            (should (> cloned 0))
+            (should (not (= mol cloned)))
+            ;; Both should have same properties
+            (should (= (indigo-count-atoms mol)
+                       (indigo-count-atoms cloned))))
+        (indigo-free cloned)))))
+
+(ert-deftest test-with-molecules-exact-matching ()
+  "Test exact matching with plural macro."
+  (let ((match-same
+         (indigo-with-molecule* ((mol1 "CCO")
+                                 (mol2 "CCO"))
+           (indigo-exact-match mol1 mol2 "")))
+        (match-different
+         (indigo-with-molecule* ((mol1 "CCO")
+                                 (mol2 "CCC"))
+           (indigo-exact-match mol1 mol2 ""))))
+    (should (integerp match-same))
+    (should (integerp match-different))))
+
+(ert-deftest test-with-molecule-substructure-matching ()
+  "Test substructure matching with with- macros."
+  (indigo-with-molecule (target "c1ccccc1CC")  ; Ethylbenzene
+    (indigo-with-query (query "c1ccccc1")      ; Benzene ring
+      (indigo-with-matcher (matcher target)
+        (should (integerp matcher))
+        (should (> matcher 0))))))
+
+;;; Property Aggregation Tests
+
+(ert-deftest test-with-molecule-format-conversions ()
+  "Test multiple format conversions with single molecule."
+  (let ((results
+         (indigo-with-molecule (mol "CCO")
+           (list
+            :smiles (indigo-canonical-smiles mol)
+            :molfile (indigo-molfile mol)
+            :cml (indigo-cml mol)))))
+    ;; Test SMILES
+    (should (stringp (plist-get results :smiles)))
+    (should (string-match-p "CCO\\|OCC" (plist-get results :smiles)))
+    ;; Test MOL file
+    (should (stringp (plist-get results :molfile)))
+    (should (string-match-p "V2000" (plist-get results :molfile)))
+    ;; Test CML
+    (should (stringp (plist-get results :cml)))
+    (should (string-match-p "<molecule" (plist-get results :cml)))))
+
+(ert-deftest test-with-molecule-property-calculations ()
+  "Test multiple property calculations with single molecule."
+  (let ((results
+         (indigo-with-molecule (mol "CCO")
+           (list
+            :weight (indigo-molecular-weight mol)
+            :formula (indigo-gross-formula mol)
+            :most-abundant (indigo-most-abundant-mass mol)
+            :monoisotopic (indigo-monoisotopic-mass mol)))))
+    ;; Test molecular weight
+    (should (floatp (plist-get results :weight)))
+    (should (> (plist-get results :weight) 40))
+    (should (< (plist-get results :weight) 50))
+    ;; Test gross formula
+    (should (stringp (plist-get results :formula)))
+    (should (string-match-p "C.*H.*O" (plist-get results :formula)))
+    ;; Test masses
+    (should (floatp (plist-get results :most-abundant)))
+    (should (floatp (plist-get results :monoisotopic)))))
+
+(ert-deftest test-with-molecule-counting-operations ()
+  "Test multiple counting operations with single molecule."
+  (let ((ethanol-counts
+         (indigo-with-molecule (mol "CCO")
+           (list
+            :atoms (indigo-count-atoms mol)
+            :bonds (indigo-count-bonds mol)
+            :heavy-atoms (indigo-count-heavy-atoms mol)
+            :hydrogens (indigo-count-implicit-hydrogens mol))))
+        (benzene-counts
+         (indigo-with-molecule (mol "c1ccccc1")
+           (list
+            :atoms (indigo-count-atoms mol)
+            :rings (indigo-count-sssr mol)
+            :heavy-atoms (indigo-count-heavy-atoms mol)))))
+    ;; Ethanol tests
+    (should (= (plist-get ethanol-counts :atoms) 3))
+    (should (= (plist-get ethanol-counts :bonds) 2))
+    (should (= (plist-get ethanol-counts :heavy-atoms) 3))
+    ;; Benzene tests
+    (should (= (plist-get benzene-counts :atoms) 6))
+    (should (= (plist-get benzene-counts :rings) 1))
+    (should (= (plist-get benzene-counts :heavy-atoms) 6))))
+
+(ert-deftest test-with-molecule-boolean-properties ()
+  "Test multiple boolean property checks with single molecule."
+  (let ((results
+         (indigo-with-molecule (mol "CCO")
+           (list
+            :chiral (indigo-is-chiral mol)
+            :has-coords (indigo-has-coordinates mol)
+            :has-z (indigo-has-z-coord mol)))))
+    ;; All should return boolean values
+    (should (or (eq (plist-get results :chiral) t)
+                (eq (plist-get results :chiral) nil)))
+    (should (or (eq (plist-get results :has-coords) t)
+                (eq (plist-get results :has-coords) nil)))
+    (should (or (eq (plist-get results :has-z) t)
+                (eq (plist-get results :has-z) nil)))))
+
+(ert-deftest test-with-molecule-layered-code ()
+  "Test layered code generation with with- macro."
+  (let ((code
+         (indigo-with-molecule (mol "c1ccccc1")
+           (indigo-layered-code mol))))
+    (should (stringp code))
+    (should (> (length code) 0))))
+
+(ert-deftest test-with-molecule-multiple-format-operations ()
+  "Test multiple format conversions in sequence."
+  (let ((conversions
+         (indigo-with-molecule (mol "c1ccccc1")
+           ;; Do multiple conversions without worrying about cleanup
+           (list
+            (indigo-canonical-smiles mol)
+            (indigo-smiles mol)
+            (indigo-gross-formula mol)
+            (indigo-layered-code mol)))))
+    (should (= (length conversions) 4))
+    (should (cl-every #'stringp conversions))))
+
 (provide 'test-indigo-molecular)
 
 ;;; test-indigo-molecular.el ends here

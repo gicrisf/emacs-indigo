@@ -67,7 +67,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"CCO\")
     (indigo-with-atoms-stream (stream mol)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -85,7 +85,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"CCO\")
     (indigo-with-bonds-stream (stream mol)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -105,7 +105,7 @@ Example:
     (indigo-with-atoms-iterator (atoms mol)
       (let ((atom (indigo-next atoms)))
         (indigo-with-neighbors-stream (stream atom)
-          (indigo-stream-car stream)))))"
+          (indigo-stream-first stream)))))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (atom-var (cadr binding))
@@ -123,7 +123,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"C.C.C\")
     (indigo-with-components-stream (stream mol)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -141,7 +141,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"c1ccccc1\")
     (indigo-with-sssr-stream (stream mol)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -159,7 +159,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"c1ccccc1\")
     (indigo-with-rings-stream (stream mol 3 7)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -179,7 +179,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"CCO\")
     (indigo-with-subtrees-stream (stream mol 1 3)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -199,7 +199,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-molecule (mol \"C[C@H](O)N\")
     (indigo-with-stereocenters-stream (stream mol)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (mol-var (cadr binding))
@@ -217,7 +217,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-reaction (rxn \"CCO>>CC=O\")
     (indigo-with-reactants-stream (stream rxn)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (rxn-var (cadr binding))
@@ -235,7 +235,7 @@ All forced elements and the iterator are freed on exit.
 Example:
   (indigo-with-reaction (rxn \"CCO>>CC=O\")
     (indigo-with-products-stream (stream rxn)
-      (indigo-stream-car stream)))"
+      (indigo-stream-first stream)))"
   (declare (indent 1))
   (let ((stream-var (car binding))
         (rxn-var (cadr binding))

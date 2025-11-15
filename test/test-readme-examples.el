@@ -1,6 +1,6 @@
 ;;; test-readme-examples.el --- Tests for all README.md examples -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2025 Giovanni Crisalfi
 
 ;;; Commentary:
 
@@ -53,7 +53,7 @@
     (should (integerp result))
     (should (= result 2))))
 
-;;; Advanced Examples - indigo-let* and indigo-map
+;;; Advanced Examples
 
 (ert-deftest test-readme-advanced-example ()
   (let ((result
@@ -65,14 +65,29 @@
     (should (= (length result) 6))
     (should (equal result '("C" "C" "C" "C" "C" "C")))))
 
-(ert-deftest test-readme-indigo-let-example ()
-  "Test the indigo-let* example comparing two molecules."
+(ert-deftest test-readme-molecular-weights-example ()
+  "Test comparing molecular weights of multiple molecules."
   (let ((result
-         (indigo-let* ((:molecule mol1 "CCO")      ; Ethanol
-                       (:molecule mol2 "CC(O)C")   ; Isopropanol
-                       (:fingerprint fp1 mol1 "sim")
-                       (:fingerprint fp2 mol2 "sim"))
-           (indigo-similarity fp1 fp2 :tanimoto))))
+         (indigo-with-molecule* ((ethanol "CCO")
+                                 (benzene "c1ccccc1")
+                                 (propane "CCC"))
+           (list (indigo-molecular-weight ethanol)
+                 (indigo-molecular-weight benzene)
+                 (indigo-molecular-weight propane)))))
+    (should (listp result))
+    (should (= (length result) 3))
+    (should (< (abs (- (nth 0 result) 46.069)) 0.01))
+    (should (< (abs (- (nth 1 result) 78.114)) 0.01))
+    (should (< (abs (- (nth 2 result) 44.097)) 0.01))))
+
+(ert-deftest test-readme-with-macros-example ()
+  "Test comparing two molecules using with- macros."
+  (let ((result
+         (indigo-with-molecule* ((mol1 "CCO")       ; Ethanol
+                                 (mol2 "CC(O)C"))   ; Isopropanol
+           (indigo-with-fingerprint* ((fp1 mol1 "sim")
+                                      (fp2 mol2 "sim"))
+             (indigo-similarity fp1 fp2 :tanimoto)))))
     (should (floatp result))
     (should (>= result 0.0))
     (should (<= result 1.0))

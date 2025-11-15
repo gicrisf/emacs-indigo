@@ -575,10 +575,10 @@
       (let* ((stream (indigo-stream atoms))
              (symbols '()))
         (while (not (indigo-stream-empty-p stream))
-          (let ((atom (indigo-stream-car stream)))
+          (let ((atom (indigo-stream-first stream)))
             (push (indigo-symbol atom) symbols)
             (indigo-free atom)
-            (setq stream (indigo-stream-next stream))))
+            (setq stream (indigo-stream-rest stream))))
         (should (= (length symbols) 6))
         (should (cl-every (lambda (s) (equal s "C")) symbols))))))
 

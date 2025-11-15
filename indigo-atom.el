@@ -70,10 +70,10 @@ Returns one of:
   nil      - Error or invalid atom
 
 Example:
-  (indigo-let* ((:molecule mol \"[O]\")  ; Oxygen radical
-                (:atoms atoms-iter mol)
-                (atom (indigo-next atoms-iter)))
-    (indigo-radical atom))
+  (indigo-with-molecule (mol \"[O]\")  ; Oxygen radical
+    (indigo-with-atoms-iterator (atoms-iter mol)
+      (let ((atom (indigo-next atoms-iter)))
+        (indigo-radical atom))))
   ;; => :doublet"
   (when-let ((code (indigo--radical-raw atom)))
     (alist-get code indigo-radicals)))

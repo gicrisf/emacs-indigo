@@ -23,8 +23,8 @@
       ;; Should have 3 atoms
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 3 count))))))
 
@@ -37,8 +37,8 @@
       ;; Should have 2 bonds
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 2 count))))))
 
@@ -51,8 +51,8 @@
       ;; Should have 3 components
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 3 count))))))
 
@@ -65,8 +65,8 @@
       ;; Should have 2 SSSR rings
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 2 count))))))
 
@@ -85,7 +85,7 @@
       (should (functionp stream))
       ;; Should have at least 1 ring
       (should-not (indigo-stream-empty-p stream))
-      (let ((first (indigo-stream-car stream)))
+      (let ((first (indigo-stream-first stream)))
         (should (integerp first))))))
 
 (ert-deftest test-indigo-with-subtrees-stream ()
@@ -96,7 +96,7 @@
       (should (functionp stream))
       ;; Should have subtrees
       (should-not (indigo-stream-empty-p stream))
-      (let ((first (indigo-stream-car stream)))
+      (let ((first (indigo-stream-first stream)))
         (should (integerp first))))))
 
 (ert-deftest test-indigo-with-stereocenters-stream ()
@@ -108,8 +108,8 @@
       ;; Should have 1 stereocenter
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 1 count))))))
 
@@ -135,8 +135,8 @@
           ;; Middle carbon should have 2 neighbors
           (let ((count 0))
             (while (not (indigo-stream-empty-p stream))
-              (should (integerp (indigo-stream-car stream)))
-              (setq stream (indigo-stream-next stream))
+              (should (integerp (indigo-stream-first stream)))
+              (setq stream (indigo-stream-rest stream))
               (setq count (1+ count)))
             (should (= 2 count))))
         (indigo-free middle-carbon)))))
@@ -152,8 +152,8 @@
       ;; Should have 2 reactants
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 2 count))))))
 
@@ -166,8 +166,8 @@
       ;; Should have 1 product
       (let ((count 0))
         (while (not (indigo-stream-empty-p stream))
-          (should (integerp (indigo-stream-car stream)))
-          (setq stream (indigo-stream-next stream))
+          (should (integerp (indigo-stream-first stream)))
+          (setq stream (indigo-stream-rest stream))
           (setq count (1+ count)))
         (should (= 1 count))))))
 
@@ -182,8 +182,8 @@
              (symbols nil))
         ;; Collect all symbols
         (while (not (indigo-stream-empty-p symbol-stream))
-          (push (indigo-stream-car symbol-stream) symbols)
-          (setq symbol-stream (indigo-stream-next symbol-stream)))
+          (push (indigo-stream-first symbol-stream) symbols)
+          (setq symbol-stream (indigo-stream-rest symbol-stream)))
         ;; Should have C, C, O
         (should (equal '("O" "C" "C") symbols))))))
 
@@ -194,13 +194,13 @@
       (indigo-with-atoms-stream (atom-stream mol)
         ;; For each atom
         (while (not (indigo-stream-empty-p atom-stream))
-          (let ((atom (indigo-stream-car atom-stream)))
+          (let ((atom (indigo-stream-first atom-stream)))
             ;; Count its neighbors
             (indigo-with-neighbors-stream (neighbor-stream atom)
               (while (not (indigo-stream-empty-p neighbor-stream))
                 (setq total-neighbors (1+ total-neighbors))
-                (setq neighbor-stream (indigo-stream-next neighbor-stream)))))
-          (setq atom-stream (indigo-stream-next atom-stream)))))
+                (setq neighbor-stream (indigo-stream-rest neighbor-stream)))))
+          (setq atom-stream (indigo-stream-rest atom-stream)))))
     ;; Propane: C-C-C has 1+2+1 = 4 neighbor connections
     (should (= 4 total-neighbors))))
 
@@ -211,8 +211,8 @@
       (indigo-with-atoms-stream (stream mol)
         ;; Force first 3 elements and extract symbols
         (dotimes (_ 3)
-          (push (indigo-symbol (indigo-stream-car stream)) symbols)
-          (setq stream (indigo-stream-next stream)))))
+          (push (indigo-symbol (indigo-stream-first stream)) symbols)
+          (setq stream (indigo-stream-rest stream)))))
     ;; Should have collected 3 carbon symbols
     (should (= 3 (length symbols)))
     (should (equal '("C" "C" "C") symbols))
@@ -225,7 +225,7 @@
     (indigo-with-molecule (mol "CCCCCCCCCC")  ; 10 carbons
       (indigo-with-atoms-stream (stream mol)
         ;; Only force first element
-        (let ((atom (indigo-stream-car stream)))
+        (let ((atom (indigo-stream-first stream)))
           (setq first-symbol (indigo-symbol atom)))))
     ;; Should have successfully gotten first symbol
     (should (equal "C" first-symbol))
@@ -241,9 +241,9 @@
         (indigo-with-molecule (mol "CCO")
           (indigo-with-atoms-stream (stream mol)
             ;; Force first two elements
-            (push (indigo-symbol (indigo-stream-car stream)) symbols)
-            (setq stream (indigo-stream-next stream))
-            (push (indigo-symbol (indigo-stream-car stream)) symbols)
+            (push (indigo-symbol (indigo-stream-first stream)) symbols)
+            (setq stream (indigo-stream-rest stream))
+            (push (indigo-symbol (indigo-stream-first stream)) symbols)
             ;; Trigger an error
             (error "Test error")))
       (error (setq error-caught t)))
