@@ -134,6 +134,13 @@ emacs_value op_indigo_layered_code(emacs_env *env, int mol);
 emacs_value op_indigo_has_z_coord(emacs_env *env, int mol);
 emacs_value op_indigo_count_heavy_atoms(emacs_env *env, int mol);
 emacs_value op_indigo_symmetry_classes(emacs_env *env, int mol);
+emacs_value op_indigo_index(emacs_env *env, int item);
+emacs_value op_indigo_charge(emacs_env *env, int atom);
+emacs_value op_indigo_xyz(emacs_env *env, int atom);
+emacs_value op_indigo_source(emacs_env *env, int bond);
+emacs_value op_indigo_destination(emacs_env *env, int bond);
+emacs_value op_indigo_bond_order(emacs_env *env, int bond);
+emacs_value op_indigo_bond_stereo(emacs_env *env, int bond);
 
 /* System operation function declarations */
 emacs_value op_indigo_version(emacs_env *env);
@@ -291,6 +298,13 @@ emacs_value Findigo_layered_code(emacs_env *env, ptrdiff_t nargs, emacs_value *a
 emacs_value Findigo_has_z_coord(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_count_heavy_atoms(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value Findigo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_index(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_charge(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_xyz(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_source(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_destination(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_bond_order(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value Findigo_bond_stereo(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 
 /* System Emacs wrapper function declarations */
 emacs_value Findigo_version(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);

@@ -77,6 +77,10 @@
 ;; Molecular operations (used by helper functions)
 (declare-function indigo-symbol "indigo-module")
 
+;; Bond property functions
+(declare-function indigo-source "indigo-module")
+(declare-function indigo-destination "indigo-module")
+
 ;;; Module Loading
 
 ;; Load the compiled module
@@ -101,6 +105,9 @@
 
 ;; Load the module when this file is loaded
 (indigo-load-module)
+
+;; Load bond enum mappings
+(require 'indigo-bond)
 
 ;;; Iterator Helper Functions
 

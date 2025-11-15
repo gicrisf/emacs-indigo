@@ -69,7 +69,7 @@ Convenience functions for quick calculations:
 (indigo-do-ring-count "c1ccccc1")         ; => 1
 
 ;; Substructure matching
-(indigo-do-substructure-match "CCO" "CO") ; => t (ethanol contains OH)
+(indigo-do-substructure-match "CCO" "[OH]") ; => t (ethanol contains OH)
 (indigo-do-exact-match "CCO" "OCC")       ; => t (same molecule)
 
 ;; Reaction processing

@@ -108,6 +108,68 @@ emacs_value op_indigo_count_heavy_atoms(emacs_env *env, int mol) {
     return env->make_integer(env, count);
 }
 
+/* Atom properties */
+emacs_value op_indigo_index(emacs_env *env, int item) {
+    int index = indigoIndex(item);
+    if (index < 0) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, index);
+}
+
+emacs_value op_indigo_charge(emacs_env *env, int atom) {
+    int charge = 0;
+    if (indigoGetCharge(atom, &charge) != 1) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, charge);
+}
+
+emacs_value op_indigo_xyz(emacs_env *env, int atom) {
+    float *xyz = indigoXYZ(atom);
+    if (!xyz) {
+        return env->intern(env, "nil");
+    }
+
+    /* Build list (x y z) from right to left */
+    emacs_value result = env->intern(env, "nil");
+    emacs_value z = env->make_float(env, xyz[2]);
+    result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){z, result});
+    emacs_value y = env->make_float(env, xyz[1]);
+    result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){y, result});
+    emacs_value x = env->make_float(env, xyz[0]);
+    result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){x, result});
+
+    return result;
+}
+
+/* Bond properties */
+emacs_value op_indigo_source(emacs_env *env, int bond) {
+    int source = indigoSource(bond);
+    if (source < 0) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, source);
+}
+
+emacs_value op_indigo_destination(emacs_env *env, int bond) {
+    int dest = indigoDestination(bond);
+    if (dest < 0) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, dest);
+}
+
+emacs_value op_indigo_bond_order(emacs_env *env, int bond) {
+    int order = indigoBondOrder(bond);
+    return env->make_integer(env, order);
+}
+
+emacs_value op_indigo_bond_stereo(emacs_env *env, int bond) {
+    int stereo = indigoBondStereo(bond);
+    return env->make_integer(env, stereo);
+}
+
 /* Boolean properties */
 emacs_value op_indigo_is_chiral(emacs_env *env, int mol) {
     return indigoIsChiral(mol) ? env->intern(env, "t") : env->intern(env, "nil");

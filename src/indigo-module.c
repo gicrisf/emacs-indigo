@@ -248,6 +248,27 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_count_heavy_atoms, "indigo-count-heavy-atoms",
          "Get heavy atom count from molecule handle", NULL);
 
+    mkfn(env, 1, 1, Findigo_index, "indigo-index",
+         "Get the index of an item (atom, bond, etc.)", NULL);
+
+    mkfn(env, 1, 1, Findigo_charge, "indigo-charge",
+         "Get formal charge of an atom", NULL);
+
+    mkfn(env, 1, 1, Findigo_xyz, "indigo-xyz",
+         "Get XYZ coordinates of an atom as a list (x y z)", NULL);
+
+    mkfn(env, 1, 1, Findigo_source, "indigo-source",
+         "Get the source atom index of a bond", NULL);
+
+    mkfn(env, 1, 1, Findigo_destination, "indigo-destination",
+         "Get the destination atom index of a bond", NULL);
+
+    mkfn(env, 1, 1, Findigo_bond_order, "indigo--bond-order-raw",
+         "Get raw bond order integer: 1 (single), 2 (double), 3 (triple), 4 (aromatic), 0 (query)", NULL);
+
+    mkfn(env, 1, 1, Findigo_bond_stereo, "indigo--bond-stereo-raw",
+         "Get raw bond stereochemistry integer: 5 (up), 6 (down), 4 (either), 7 (cis), 8 (trans), 0 (none)", NULL);
+
     mkfn(env, 1, 1, Findigo_symmetry_classes, "indigo-symmetry-classes",
          "Get symmetry classes from molecule handle", NULL);
 
