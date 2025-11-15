@@ -57,23 +57,38 @@
 
 (ert-deftest test-readme-advanced-example ()
   (let ((result
-         (indigo-let* ((:molecule mol "c1ccccc1")  ; Benzene
-                       (:atoms atoms mol))
-           ;; Get all atom symbols
-           (indigo-map #'indigo-symbol atoms))))
+         (indigo-with-molecule (mol "c1ccccc1")  ; Benzene
+           (indigo-with-atoms-iterator (atoms mol)
+             ;; Get all atom symbols
+             (indigo-map #'indigo-symbol atoms)))))
     (should (listp result))
     (should (= (length result) 6))
     (should (equal result '("C" "C" "C" "C" "C" "C")))))
+
+(ert-deftest test-readme-indigo-let-example ()
+  "Test the indigo-let* example comparing two molecules."
+  (let ((result
+         (indigo-let* ((:molecule mol1 "CCO")      ; Ethanol
+                       (:molecule mol2 "CC(O)C")   ; Isopropanol
+                       (:fingerprint fp1 mol1 "sim")
+                       (:fingerprint fp2 mol2 "sim"))
+           (indigo-similarity fp1 fp2 "tanimoto"))))
+    (should (floatp result))
+    (should (>= result 0.0))
+    (should (<= result 1.0))
+    ;; Should be around 0.71 for these molecules
+    (should (> result 0.7))
+    (should (< result 0.72))))
 
 ;;; Reaction Examples
 
 (ert-deftest test-readme-reaction-example ()
   (let ((result
-         (indigo-let* ((:reaction rxn "CCO.CC(=O)O>>CCOC(=O)C")  ; Esterification
-                       (:reactants reactants rxn)
-                       (:products products rxn))
-           (list :reactant-count (length (indigo-map #'indigo-canonical-smiles reactants))
-                 :product-count (length (indigo-map #'indigo-canonical-smiles products))))))
+         (indigo-with-reaction (rxn "CCO.CC(=O)O>>CCOC(=O)C")  ; Esterification
+           (indigo-with-reactants-iterator (reactants rxn)
+             (indigo-with-products-iterator (products rxn)
+               (list :reactant-count (length (indigo-map #'indigo-canonical-smiles reactants))
+                     :product-count (length (indigo-map #'indigo-canonical-smiles products))))))))
     (should (listp result))
     (should (= (plist-get result :reactant-count) 2))
     (should (= (plist-get result :product-count) 1))))
@@ -84,7 +99,7 @@
   (let ((temp-file (make-temp-file "benzene" nil ".svg")))
     (unwind-protect
         (progn
-          (indigo-let* ((:molecule mol "c1ccccc1"))
+          (indigo-with-molecule (mol "c1ccccc1")
             (indigo-set-option "render-output-format" "svg")
             (indigo-set-option-int "render-image-width" 300)
             (indigo-set-option-int "render-image-height" 300)

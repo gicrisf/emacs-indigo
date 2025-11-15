@@ -22,9 +22,9 @@ Emacs Lisp bindings for the [Indigo](https://lifescience.opensource.epam.com/ind
 
 **Version 0.8.0**
 
-**Most features are implemented and tested** (150+ tests), with core operations complete. Particularly, we have features complete molecular operations, a full iterator system for structure traversal, rendering and visualization support, and automatic resource management. 
+**Most features are implemented and tested** (350+ tests), with core operations complete. Particularly, we have complete molecular operations, a full iterator system for structure traversal, lazy stream abstraction with functional combinators, rendering and visualization support, and automatic resource management with intuitive `indigo-with-*` macros.
 
-Areas still in development include advanced analysis features (scaffold detection, R-group deconvolution), SDF/RDF file iteration, and additional array/writer operations. I'm also working on lazy streams.
+Areas still in development include advanced analysis features (scaffold detection, R-group deconvolution), SDF/RDF file iteration, and additional array/writer operations.
 
 ## Build
 
@@ -80,18 +80,39 @@ All `indigo-do-*` functions handle resource management automatically.
 
 ### Advanced Examples
 
-The `indigo-let*` macro provides automatic resource management for all Indigo objects and the `indigo-map` lets you easily handle an iterator:
+The `indigo-with-*` macros provide automatic resource management for all Indigo objects and the `indigo-map` function lets you easily handle an iterator:
 
 ```elisp
 ;; Analyze a molecule's structure
-(indigo-let* ((:molecule mol "c1ccccc1")  ; Benzene
-              (:atoms atoms mol))
-  ;; Get all atom symbols
-  (indigo-map #'indigo-symbol atoms))
+(indigo-with-molecule (mol "c1ccccc1")  ; Benzene
+  (indigo-with-atoms-iterator (atoms mol)
+    ;; Get all atom symbols
+    (indigo-map #'indigo-symbol atoms)))
 ;; => ("C" "C" "C" "C" "C" "C")
 ```
 
-Supported binding types:
+Available `indigo-with-*` macros:
+- Molecules: `indigo-with-molecule`, `indigo-with-mol-file`, `indigo-with-query-molecule`, `indigo-with-query-mol-file`, `indigo-with-smarts`, `indigo-with-smarts-file`
+- Reactions: `indigo-with-reaction`, `indigo-with-rxn-file`
+- Iterators: `indigo-with-atoms-iterator`, `indigo-with-bonds-iterator`, `indigo-with-neighbors-iterator`, `indigo-with-components-iterator`, `indigo-with-sssr-iterator`, `indigo-with-rings-iterator`, `indigo-with-subtrees-iterator`, `indigo-with-stereocenters-iterator`, `indigo-with-reactants-iterator`, `indigo-with-products-iterator`
+- Fingerprints: `indigo-with-fingerprint`
+- Matchers: `indigo-with-matcher`
+- Arrays: `indigo-with-array`
+- Writers: `indigo-with-file-writer`, `indigo-with-buffer-writer`
+
+For complex workflows with multiple resources, you can also use `indigo-let*` with keyword-based bindings:
+
+```elisp
+;; Compare two molecules
+(indigo-let* ((:molecule mol1 "CCO")      ; Ethanol
+              (:molecule mol2 "CC(O)C")   ; Isopropanol
+              (:fingerprint fp1 mol1 "sim")
+              (:fingerprint fp2 mol2 "sim"))
+  (indigo-similarity fp1 fp2 "tanimoto"))
+;; => 0.714 (similarity coefficient)
+```
+
+Supported keyword bindings:
 - Molecules: `:molecule`, `:mol-file`, `:query`, `:query-file`, `:smarts`, `:smarts-file`
 - Reactions: `:reaction`, `:rxn-file`
 - Iterators: `:atoms`, `:bonds`, `:neighbors`, `:components`, `:sssr`, `:rings`, `:subtrees`, `:stereocenters`, `:reactants`, `:products`
@@ -105,11 +126,11 @@ Supported binding types:
 Process reaction components:
 
 ```elisp
-(indigo-let* ((:reaction rxn "CCO.CC(=O)O>>CCOC(=O)C")  ; Esterification
-              (:reactants reactants rxn)
-              (:products products rxn))
-  (list :reactant-count (length (indigo-map #'indigo-canonical-smiles reactants))
-        :product-count (length (indigo-map #'indigo-canonical-smiles products))))
+(indigo-with-reaction (rxn "CCO.CC(=O)O>>CCOC(=O)C")  ; Esterification
+  (indigo-with-reactants-iterator (reactants rxn)
+    (indigo-with-products-iterator (products rxn)
+      (list :reactant-count (length (indigo-map #'indigo-canonical-smiles reactants))
+            :product-count (length (indigo-map #'indigo-canonical-smiles products))))))
 ;; => (:reactant-count 2 :product-count 1)
 ```
 
@@ -118,7 +139,7 @@ Process reaction components:
 Render molecule to SVG:
 
 ```elisp
-(indigo-let* ((:molecule mol "c1ccccc1"))
+(indigo-with-molecule (mol "c1ccccc1")
   (indigo-set-option "render-output-format" "svg")
   (indigo-set-option-int "render-image-width" 300)
   (indigo-set-option-int "render-image-height" 300)

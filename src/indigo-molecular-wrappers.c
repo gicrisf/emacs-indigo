@@ -127,6 +127,16 @@ emacs_value Findigo_charge(emacs_env *env, ptrdiff_t nargs, emacs_value *args, v
     return op_indigo_charge(env, atom);
 }
 
+emacs_value Findigo_radical(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int atom = env->extract_integer(env, args[0]);
+    return op_indigo_radical(env, atom);
+}
+
+emacs_value Findigo_radical_electrons(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int atom = env->extract_integer(env, args[0]);
+    return op_indigo_radical_electrons(env, atom);
+}
+
 emacs_value Findigo_xyz(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
     int atom = env->extract_integer(env, args[0]);
     return op_indigo_xyz(env, atom);
@@ -220,4 +230,25 @@ emacs_value Findigo_similarity(emacs_env *env, ptrdiff_t nargs, emacs_value *arg
 emacs_value Findigo_symmetry_classes(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
     int mol = env->extract_integer(env, args[0]);
     return op_indigo_symmetry_classes(env, mol);
+}
+
+/* Structure manipulation functions */
+emacs_value Findigo_aromatize(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    return op_indigo_aromatize(env, item);
+}
+
+emacs_value Findigo_layout(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int object = env->extract_integer(env, args[0]);
+    return op_indigo_layout(env, object);
+}
+
+emacs_value Findigo_fold_hydrogens(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    return op_indigo_fold_hydrogens(env, item);
+}
+
+emacs_value Findigo_unfold_hydrogens(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data) {
+    int item = env->extract_integer(env, args[0]);
+    return op_indigo_unfold_hydrogens(env, item);
 }

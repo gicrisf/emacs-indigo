@@ -125,6 +125,22 @@ emacs_value op_indigo_charge(emacs_env *env, int atom) {
     return env->make_integer(env, charge);
 }
 
+emacs_value op_indigo_radical(emacs_env *env, int atom) {
+    int radical = 0;
+    if (indigoGetRadical(atom, &radical) != 1) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, radical);
+}
+
+emacs_value op_indigo_radical_electrons(emacs_env *env, int atom) {
+    int electrons = 0;
+    if (indigoGetRadicalElectrons(atom, &electrons) != 1) {
+        return env->intern(env, "nil");
+    }
+    return env->make_integer(env, electrons);
+}
+
 emacs_value op_indigo_xyz(emacs_env *env, int atom) {
     float *xyz = indigoXYZ(atom);
     if (!xyz) {
@@ -219,13 +235,34 @@ emacs_value op_indigo_symmetry_classes(emacs_env *env, int mol) {
     if (classes == NULL) {
         return env->intern(env, "nil");
     }
-    
+
     /* Create a list of symmetry classes */
     emacs_value result = env->intern(env, "nil");
     for (int i = count_out - 1; i >= 0; i--) {
         emacs_value class_val = env->make_integer(env, classes[i]);
         result = env->funcall(env, env->intern(env, "cons"), 2, (emacs_value[]){class_val, result});
     }
-    
+
     return result;
+}
+
+/* Structure manipulation functions */
+emacs_value op_indigo_aromatize(emacs_env *env, int item) {
+    int status = indigoAromatize(item);
+    return env->make_integer(env, status);
+}
+
+emacs_value op_indigo_layout(emacs_env *env, int object) {
+    int status = indigoLayout(object);
+    return env->make_integer(env, status);
+}
+
+emacs_value op_indigo_fold_hydrogens(emacs_env *env, int item) {
+    int status = indigoFoldHydrogens(item);
+    return env->make_integer(env, status);
+}
+
+emacs_value op_indigo_unfold_hydrogens(emacs_env *env, int item) {
+    int status = indigoUnfoldHydrogens(item);
+    return env->make_integer(env, status);
 }

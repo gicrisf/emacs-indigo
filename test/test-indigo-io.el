@@ -165,12 +165,20 @@
 ;;; Error handling tests
 
 (ert-deftest test-indigo-load-molecule-from-file-nonexistent ()
-  "Test loading molecule from non-existent file."
-  (let ((mol (indigo-load-molecule-from-file "/nonexistent/file.smi")))
-    ;; Should return a handle even for failed loads (Indigo behavior)
+  "Test loading molecule from non-existent file (private API)."
+  (let ((mol (indigo--load-molecule-from-file "/nonexistent/file.smi")))
+    ;; Private API returns -1 or nil on error
     ;; The actual error checking would be done via indigo-get-last-error
     (when (and (integerp mol) (> mol 0))
       (indigo-free mol))))
+
+(ert-deftest test-indigo-load-molecule-from-file-nonexistent-public-api ()
+  "Test loading molecule from non-existent file signals error (public API)."
+  (should-error (indigo-load-molecule-from-file "/nonexistent/file.smi")))
+
+(ert-deftest test-indigo-load-invalid-smiles-public-api ()
+  "Test loading invalid SMILES signals error (public API)."
+  (should-error (indigo-load-molecule-from-string "INVALID_SMILES")))
 
 ;; (ert-deftest test-indigo-load-molecule-from-buffer-invalid ()
 ;;   "Test loading molecule from invalid buffer content."
@@ -388,6 +396,105 @@
           (should (stringp molfile))
           (should (not (string-empty-p molfile))))
         (indigo-free mol)))))
+
+;;; Public API Error Handling Tests
+
+(ert-deftest test-public-api-cleanup-on-error ()
+  "Test that public API cleans up resources even when errors occur."
+  (let ((initial-refs (indigo-count-references)))
+    ;; Error during molecule loading
+    (should-error (indigo-load-molecule-from-string "INVALID"))
+    (should (= (indigo-count-references) initial-refs))
+
+    ;; Error during file loading
+    (should-error (indigo-load-molecule-from-file "/nonexistent"))
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-public-api-error-messages ()
+  "Test that public API provides meaningful error messages."
+  (condition-case err
+      (progn
+        (indigo-load-molecule-from-string "INVALID_SMILES")
+        (should nil)) ; Should not reach here
+    (error
+     ;; Error message should mention what failed
+     (should (string-match-p "Failed to load molecule" (error-message-string err))))))
+
+(ert-deftest test-public-api-valid-operations ()
+  "Test that public API works correctly for valid inputs."
+  ;; Create molecule
+  (let ((mol (indigo-create-molecule)))
+    (should (integerp mol))
+    (should (> mol 0))
+    (indigo-free mol))
+
+  ;; Load molecule from string
+  (let ((mol (indigo-load-molecule-from-string "CCO")))
+    (should (integerp mol))
+    (should (> mol 0))
+    (should (= (indigo-count-atoms mol) 3))
+    (indigo-free mol))
+
+  ;; Load query molecule
+  (let ((query (indigo-load-query-molecule-from-string "c1ccccc1")))
+    (should (integerp query))
+    (should (> query 0))
+    (indigo-free query))
+
+  ;; Load reaction
+  (let ((rxn (indigo-load-reaction-from-string "CCO.CC>>CCOC")))
+    (should (integerp rxn))
+    (should (> rxn 0))
+    (indigo-free rxn)))
+
+(ert-deftest test-public-api-iterators ()
+  "Test that public API iterator creation works correctly."
+  (let ((mol (indigo-load-molecule-from-string "CCO")))
+    (unwind-protect
+        (progn
+          ;; Atoms iterator
+          (let ((atoms (indigo-iterate-atoms mol)))
+            (should (integerp atoms))
+            (should (> atoms 0))
+            (indigo-free atoms))
+
+          ;; Bonds iterator
+          (let ((bonds (indigo-iterate-bonds mol)))
+            (should (integerp bonds))
+            (should (> bonds 0))
+            (indigo-free bonds))
+
+          ;; SSSR iterator
+          (let ((sssr (indigo-iterate-sssr mol)))
+            (should (integerp sssr))
+            (should (> sssr 0))
+            (indigo-free sssr)))
+      (indigo-free mol))))
+
+(ert-deftest test-public-api-fingerprint-and-matcher ()
+  "Test that public API fingerprint and matcher creation works."
+  (let ((mol (indigo-load-molecule-from-string "CCO")))
+    (unwind-protect
+        (progn
+          ;; Fingerprint
+          (let ((fp (indigo-fingerprint mol "sim")))
+            (should (integerp fp))
+            (should (> fp 0))
+            (indigo-free fp))
+
+          ;; Substructure matcher
+          (let ((matcher (indigo-substructure-matcher mol)))
+            (should (integerp matcher))
+            (should (> matcher 0))
+            (indigo-free matcher)))
+      (indigo-free mol))))
+
+(ert-deftest test-public-api-array-creation ()
+  "Test that public API array creation works."
+  (let ((arr (indigo-create-array)))
+    (should (integerp arr))
+    (should (> arr 0))
+    (indigo-free arr)))
 
 (provide 'test-indigo-io)
 

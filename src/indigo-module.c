@@ -147,48 +147,49 @@ int emacs_module_init(struct emacs_runtime *ert) {
          "Free an Indigo object handle", NULL);
 
     /* Molecule creation */
-    mkfn(env, 0, 0, Findigo_create_molecule, "indigo-create-molecule",
-         "Create empty molecule and return handle", NULL);
+    /* Private API - I/O functions (exposed with -- prefix) */
+    mkfn(env, 0, 0, Findigo_create_molecule, "indigo--create-molecule",
+         "Create empty molecule and return handle (private API)", NULL);
 
-    mkfn(env, 0, 0, Findigo_create_query_molecule, "indigo-create-query-molecule",
-         "Create empty query molecule and return handle", NULL);
+    mkfn(env, 0, 0, Findigo_create_query_molecule, "indigo--create-query-molecule",
+         "Create empty query molecule and return handle (private API)", NULL);
 
     /* Molecule loading from strings */
-    mkfn(env, 1, 1, Findigo_load_molecule_from_string, "indigo-load-molecule-from-string",
-         "Load molecule from string and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_molecule_from_string, "indigo--load-molecule-from-string",
+         "Load molecule from string and return handle (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_load_query_molecule_from_string, "indigo-load-query-molecule-from-string",
-         "Load query molecule from string and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_query_molecule_from_string, "indigo--load-query-molecule-from-string",
+         "Load query molecule from string and return handle (private API)", NULL);
 
     /* Molecule loading from files */
-    mkfn(env, 1, 1, Findigo_load_molecule_from_file, "indigo-load-molecule-from-file",
-         "Load molecule from file and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_molecule_from_file, "indigo--load-molecule-from-file",
+         "Load molecule from file and return handle (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_load_query_molecule_from_file, "indigo-load-query-molecule-from-file",
-         "Load query molecule from file and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_query_molecule_from_file, "indigo--load-query-molecule-from-file",
+         "Load query molecule from file and return handle (private API)", NULL);
 
     /* Molecule loading from buffers - commented out (redundant with string versions) */
-    /* mkfn(env, 1, 1, Findigo_load_molecule_from_buffer, "indigo-load-molecule-from-buffer",
-         "Load molecule from buffer and return handle", NULL);
+    /* mkfn(env, 1, 1, Findigo_load_molecule_from_buffer, "indigo--load-molecule-from-buffer",
+         "Load molecule from buffer and return handle (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_load_query_molecule_from_buffer, "indigo-load-query-molecule-from-buffer",
-         "Load query molecule from buffer and return handle", NULL); */
+    mkfn(env, 1, 1, Findigo_load_query_molecule_from_buffer, "indigo--load-query-molecule-from-buffer",
+         "Load query molecule from buffer and return handle (private API)", NULL); */
 
     /* SMARTS loading */
-    mkfn(env, 1, 1, Findigo_load_smarts_from_string, "indigo-load-smarts-from-string",
-         "Load SMARTS from string and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_smarts_from_string, "indigo--load-smarts-from-string",
+         "Load SMARTS from string and return handle (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_load_smarts_from_file, "indigo-load-smarts-from-file",
-         "Load SMARTS from file and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_smarts_from_file, "indigo--load-smarts-from-file",
+         "Load SMARTS from file and return handle (private API)", NULL);
 
-    /* mkfn(env, 1, 1, Findigo_load_smarts_from_buffer, "indigo-load-smarts-from-buffer",
-         "Load SMARTS from buffer and return handle", NULL); */
+    /* mkfn(env, 1, 1, Findigo_load_smarts_from_buffer, "indigo--load-smarts-from-buffer",
+         "Load SMARTS from buffer and return handle (private API)", NULL); */
 
-    mkfn(env, 1, 1, Findigo_load_reaction_from_string, "indigo-load-reaction-from-string",
-         "Load reaction from string and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_reaction_from_string, "indigo--load-reaction-from-string",
+         "Load reaction from string and return handle (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_load_reaction_from_file, "indigo-load-reaction-from-file",
-         "Load reaction from file and return handle", NULL);
+    mkfn(env, 1, 1, Findigo_load_reaction_from_file, "indigo--load-reaction-from-file",
+         "Load reaction from file and return handle (private API)", NULL);
 
     /* File saving */
     mkfn(env, 2, 2, Findigo_save_molfile_to_file, "indigo-save-molfile-to-file",
@@ -254,6 +255,12 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_charge, "indigo-charge",
          "Get formal charge of an atom", NULL);
 
+    mkfn(env, 1, 1, Findigo_radical, "indigo--radical-raw",
+         "Get raw radical integer: 0 (none), 101 (singlet), 102 (doublet), 103 (triplet)", NULL);
+
+    mkfn(env, 1, 1, Findigo_radical_electrons, "indigo-radical-electrons",
+         "Get number of radical electrons on an atom", NULL);
+
     mkfn(env, 1, 1, Findigo_xyz, "indigo-xyz",
          "Get XYZ coordinates of an atom as a list (x y z)", NULL);
 
@@ -272,14 +279,26 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_symmetry_classes, "indigo-symmetry-classes",
          "Get symmetry classes from molecule handle", NULL);
 
+    mkfn(env, 1, 1, Findigo_aromatize, "indigo--aromatize",
+         "Internal: Aromatize molecule (detect and mark aromatic rings)", NULL);
+
+    mkfn(env, 1, 1, Findigo_layout, "indigo--layout",
+         "Internal: Calculate 2D coordinates for molecule", NULL);
+
+    mkfn(env, 1, 1, Findigo_fold_hydrogens, "indigo--fold-hydrogens",
+         "Internal: Remove explicit hydrogens (convert to implicit)", NULL);
+
+    mkfn(env, 1, 1, Findigo_unfold_hydrogens, "indigo--unfold-hydrogens",
+         "Internal: Add explicit hydrogens to molecule", NULL);
+
     mkfn(env, 2, 3, Findigo_exact_match, "indigo-exact-match",
          "Check exact match between two molecules", NULL);
 
-    mkfn(env, 1, 1, Findigo_substructure_matcher, "indigo-substructure-matcher",
-         "Create substructure matcher for molecule", NULL);
+    mkfn(env, 1, 1, Findigo_substructure_matcher, "indigo--substructure-matcher",
+         "Create substructure matcher for molecule (private API)", NULL);
 
-    mkfn(env, 2, 2, Findigo_fingerprint, "indigo-fingerprint",
-         "Generate fingerprint for molecule", NULL);
+    mkfn(env, 2, 2, Findigo_fingerprint, "indigo--fingerprint",
+         "Generate fingerprint for molecule (private API)", NULL);
 
     mkfn(env, 3, 3, Findigo_similarity, "indigo-similarity",
          "Calculate similarity between two fingerprints", NULL);
@@ -294,12 +313,12 @@ int emacs_module_init(struct emacs_runtime *ert) {
          "Get atom symbol", NULL);
     
     /* Normalization functions */
-    mkfn(env, 1, 2, Findigo_normalize, "indigo-normalize",
-         "Normalize molecule structure (MOLECULE [OPTIONS])", NULL);
-    mkfn(env, 1, 1, Findigo_standardize, "indigo-standardize",
-         "Standardize molecule charges, stereo etc. (MOLECULE)", NULL);
-    mkfn(env, 3, 3, Findigo_ionize, "indigo-ionize",
-         "Ionize molecule at specified pH (MOLECULE PH PH-TOLERANCE)", NULL);
+    mkfn(env, 1, 2, Findigo_normalize, "indigo--normalize",
+         "Internal: Normalize molecule structure (MOLECULE [OPTIONS])", NULL);
+    mkfn(env, 1, 1, Findigo_standardize, "indigo--standardize",
+         "Internal: Standardize molecule charges, stereo etc. (MOLECULE)", NULL);
+    mkfn(env, 3, 3, Findigo_ionize, "indigo--ionize",
+         "Internal: Ionize molecule at specified pH (MOLECULE PH PH-TOLERANCE)", NULL);
 
     /* System functions */
     mkfn(env, 0, 0, Findigo_alloc_session_id, "indigo-alloc-session-id",
@@ -343,26 +362,27 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_next, "indigo-next",
          "Get the next item from an iterator", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_atoms, "indigo-iterate-atoms",
-         "Create an iterator over atoms in a molecule", NULL);
+    /* Private API - Iterator functions (exposed with -- prefix) */
+    mkfn(env, 1, 1, Findigo_iterate_atoms, "indigo--iterate-atoms",
+         "Create an iterator over atoms in a molecule (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_bonds, "indigo-iterate-bonds",
-         "Create an iterator over bonds in a molecule", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_bonds, "indigo--iterate-bonds",
+         "Create an iterator over bonds in a molecule (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_neighbors, "indigo-iterate-neighbors",
-         "Create an iterator over neighbors of an atom", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_neighbors, "indigo--iterate-neighbors",
+         "Create an iterator over neighbors of an atom (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_components, "indigo-iterate-components",
-         "Create an iterator over connected components in a molecule", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_components, "indigo--iterate-components",
+         "Create an iterator over connected components in a molecule (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_sssr, "indigo-iterate-sssr",
-         "Create an iterator over SSSR rings in a molecule", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_sssr, "indigo--iterate-sssr",
+         "Create an iterator over SSSR rings in a molecule (private API)", NULL);
 
-    mkfn(env, 3, 3, Findigo_iterate_subtrees, "indigo-iterate-subtrees",
-         "Create an iterator over subtrees in a molecule with atom count range", NULL);
+    mkfn(env, 3, 3, Findigo_iterate_subtrees, "indigo--iterate-subtrees",
+         "Create an iterator over subtrees in a molecule with atom count range (private API)", NULL);
 
-    mkfn(env, 3, 3, Findigo_iterate_rings, "indigo-iterate-rings",
-         "Create an iterator over rings in a molecule with atom count range", NULL);
+    mkfn(env, 3, 3, Findigo_iterate_rings, "indigo--iterate-rings",
+         "Create an iterator over rings in a molecule with atom count range (private API)", NULL);
 
     mkfn(env, 3, 3, Findigo_iterate_edge_submolecules, "indigo-iterate-edge-submolecules",
          "Create an iterator over edge submolecules with bond count range", NULL);
@@ -373,8 +393,8 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_iterate_rsites, "indigo-iterate-rsites",
          "Create an iterator over R-sites in a molecule", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_stereocenters, "indigo-iterate-stereocenters",
-         "Create an iterator over stereocenters in a molecule", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_stereocenters, "indigo--iterate-stereocenters",
+         "Create an iterator over stereocenters in a molecule (private API)", NULL);
 
     mkfn(env, 1, 1, Findigo_iterate_allene_centers, "indigo-iterate-allene-centers",
          "Create an iterator over allene centers in a molecule", NULL);
@@ -406,11 +426,11 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_iterate_properties, "indigo-iterate-properties",
          "Create an iterator over properties of an object", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_reactants, "indigo-iterate-reactants",
-         "Create an iterator over reactants in a reaction", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_reactants, "indigo--iterate-reactants",
+         "Create an iterator over reactants in a reaction (private API)", NULL);
 
-    mkfn(env, 1, 1, Findigo_iterate_products, "indigo-iterate-products",
-         "Create an iterator over products in a reaction", NULL);
+    mkfn(env, 1, 1, Findigo_iterate_products, "indigo--iterate-products",
+         "Create an iterator over products in a reaction (private API)", NULL);
 
     mkfn(env, 1, 1, Findigo_iterate_catalysts, "indigo-iterate-catalysts",
          "Create an iterator over catalysts in a reaction", NULL);
@@ -476,8 +496,8 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 1, 1, Findigo_to_buffer, "indigo-to-buffer",
          "Convert output handle to buffer string", NULL);
 
-    mkfn(env, 0, 0, Findigo_create_array, "indigo-create-array",
-         "Create array for multiple objects", NULL);
+    mkfn(env, 0, 0, Findigo_create_array, "indigo--create-array",
+         "Create array for multiple objects (private API)", NULL);
 
     mkfn(env, 2, 2, Findigo_array_add, "indigo-array-add",
          "Add object to array", NULL);
