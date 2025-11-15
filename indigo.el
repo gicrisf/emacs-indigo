@@ -91,6 +91,7 @@
 (require 'indigo-io)
 (require 'indigo-iter)
 (require 'indigo-stream)
+(require 'indigo-stream-iter)
 (require 'indigo-render)
 (require 'indigo-mol)
 (require 'indigo-react)
