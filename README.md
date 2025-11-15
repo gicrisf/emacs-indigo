@@ -108,7 +108,7 @@ For complex workflows with multiple resources, you can also use `indigo-let*` wi
               (:molecule mol2 "CC(O)C")   ; Isopropanol
               (:fingerprint fp1 mol1 "sim")
               (:fingerprint fp2 mol2 "sim"))
-  (indigo-similarity fp1 fp2 "tanimoto"))
+  (indigo-similarity fp1 fp2 :tanimoto))
 ;; => 0.714 (similarity coefficient)
 ```
 

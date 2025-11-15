@@ -300,8 +300,8 @@ int emacs_module_init(struct emacs_runtime *ert) {
     mkfn(env, 2, 2, Findigo_fingerprint, "indigo--fingerprint",
          "Generate fingerprint for molecule (private API)", NULL);
 
-    mkfn(env, 3, 3, Findigo_similarity, "indigo-similarity",
-         "Calculate similarity between two fingerprints", NULL);
+    mkfn(env, 3, 3, Findigo_similarity, "indigo--similarity",
+         "Calculate similarity between two fingerprints (private API)", NULL);
 
     mkfn(env, 1, 1, Findigo_clone, "indigo-clone",
          "Clone an Indigo object", NULL);

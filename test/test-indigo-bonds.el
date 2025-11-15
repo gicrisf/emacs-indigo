@@ -29,7 +29,6 @@
 
 (ert-deftest test-bond-source ()
   "Test indigo-source returns atom handle."
-
   (indigo-with-molecule (mol "CCO")
     (indigo-with-bonds-iterator (bonds-iter mol)
       (let* ((bond (indigo-next bonds-iter))
