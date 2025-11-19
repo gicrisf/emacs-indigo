@@ -168,6 +168,10 @@ Example:
            (progn ,@body)
          (when ,var (indigo-free ,var))))))
 
+;; Auto-generate sequential binding versions
+(define-indigo-with* "reaction")
+(define-indigo-with* "rxn-file")
+
 (provide 'indigo-react)
 
 ;;; indigo-react.el ends here

@@ -1,5 +1,55 @@
 # CHANGELOG
 
+## Version 0.10.0 (2025-11-17)
+
+### Summary
+
+Version 0.10.0 completes the functional programming infrastructure with a full stream combinator library, enabling powerful lazy composition of molecular data transformations.
+
+### New Features
+
+#### Complete Stream Functional API
+
+A comprehensive set of stream combinators providing both lazy transformations and consuming operations:
+
+**Lazy combinators (return new streams):**
+- **`indigo-stream-map`** - Transform elements (already in v0.9.0)
+- **`indigo-stream-filter`** - Select elements by predicate
+- **`indigo-stream-take`** - Limit stream length
+
+**Consuming operations (force and reduce streams):**
+- **`indigo-stream-collect`** - Gather all elements into a list (already in v0.9.0)
+- **`indigo-stream-fold`** - Reduce to single accumulated value (left-associative)
+
+**Example (filtering and folding):**
+```elisp
+(indigo-with-molecule (mol "CCCCCO")
+  (indigo-with-atoms-stream (stream mol)
+    (let* ((carbons (indigo-stream-filter
+                     (lambda (atom) (equal (indigo-symbol atom) "C"))
+                     stream))
+           (indices (indigo-stream-map #'indigo-index carbons)))
+      (indigo-stream-fold #'+ 0 indices))))  ; => 10 (sum of indices)
+```
+
+All combinators maintain full laziness and memoization, enabling efficient composition without unnecessary computation.
+
+#### Macro Generator
+
+- **`define-indigo-with*` macro generator**: Automatically generates sequential binding (`*` suffix) versions of any `indigo-with-*` macro, eliminating manual duplication
+- **Extended star macro coverage**: All resource types now have `*` versions - iterators (10 macros), reactions, and arrays
+
+### Test Suite
+
+- **460+ tests**
+- **new stream combinator tests** covering:
+  - `indigo-stream-take`: Basic usage, edge cases, laziness verification, composition
+  - `indigo-stream-filter`: Filtering logic, chaining, laziness, memoization
+  - `indigo-stream-fold`: Arithmetic, string building, predicates, complex accumulators
+- Tests for `define-indigo-with*` macro generator to verify sequential binding and cleanup behavior
+
+---
+
 ## Version 0.9.0 (2025-11-15)
 
 ### Summary

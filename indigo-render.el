@@ -101,6 +101,9 @@ Example:
            (progn ,@body)
          (when ,var (indigo-free ,var))))))
 
+;; Auto-generate sequential binding version
+(define-indigo-with* "array")
+
 ;; NOT YET IMPLEMENTED - C module functions missing
 ;; (defmacro indigo-with-file-writer (binding &rest body)
 ;;   "Create file writer with automatic cleanup.

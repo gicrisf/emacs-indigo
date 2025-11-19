@@ -99,8 +99,6 @@ The `indigo-with-*` macros provide automatic resource management for all Indigo 
 ```
 
 Available `indigo-with-*` macros:
-
-**Singular macros** (single resource binding):
 - Molecules: `indigo-with-molecule`, `indigo-with-mol-file`, `indigo-with-query`, `indigo-with-query-file`, `indigo-with-smarts`, `indigo-with-smarts-file`
 - Reactions: `indigo-with-reaction`, `indigo-with-rxn-file`
 - Iterators: `indigo-with-atoms-iterator`, `indigo-with-bonds-iterator`, `indigo-with-neighbors-iterator`, `indigo-with-components-iterator`, `indigo-with-sssr-iterator`, `indigo-with-rings-iterator`, `indigo-with-subtrees-iterator`, `indigo-with-stereocenters-iterator`, `indigo-with-reactants-iterator`, `indigo-with-products-iterator`
@@ -108,12 +106,7 @@ Available `indigo-with-*` macros:
 - Matchers: `indigo-with-matcher`
 - Arrays: `indigo-with-array`
 
-**Sequential multiple binding macros** (multiple resources with `*` suffix, like `let*`):
-- Molecules: `indigo-with-molecule*`, `indigo-with-mol-file*`, `indigo-with-query*`, `indigo-with-query-file*`, `indigo-with-smarts*`, `indigo-with-smarts-file*`
-- Fingerprints: `indigo-with-fingerprint*`
-- Matchers: `indigo-with-matcher*`
-
-Bindings in `*` macros are evaluated sequentially, with proper cleanup even if later bindings fail:
+**Sequential multiple binding versions**: Each macro has a `*` suffix version (e.g., `indigo-with-molecule*`) that works like `let*`, allowing multiple resources to be bound sequentially with proper cleanup even if later bindings fail:
 
 ```elisp
 ;; Compare two molecules

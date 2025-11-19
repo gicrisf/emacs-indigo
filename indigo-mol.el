@@ -256,150 +256,15 @@ Example:
 
 ;;; Sequential Multiple Binding Macros (with * suffix, like let*)
 
-(defmacro indigo-with-molecule* (bindings &rest body)
-  "Load multiple molecules from strings with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 MOL-STRING1) (VAR2 MOL-STRING2) ...)
-
-Bindings are evaluated sequentially (like let*), and each molecule gets
-its own cleanup handler. This ensures proper cleanup even if a later
-molecule fails to load.
-
-Example:
-  (indigo-with-molecule* ((mol1 \"CCO\")
-                          (mol2 \"c1ccccc1\"))
-    (list (indigo-molecular-weight mol1)
-          (indigo-molecular-weight mol2)))
-  => (46.069 78.114)"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    (let ((first-binding (car bindings))
-          (rest-bindings (cdr bindings)))
-      `(indigo-with-molecule ,first-binding
-         (indigo-with-molecule* ,rest-bindings
-           ,@body)))))
-
-(defmacro indigo-with-mol-file* (bindings &rest body)
-  "Load multiple molecules from files with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 FILENAME1) (VAR2 FILENAME2) ...)
-
-Example:
-  (indigo-with-mol-file* ((mol1 \"mol1.mol\")
-                          (mol2 \"mol2.mol\"))
-    (list (indigo-canonical-smiles mol1)
-          (indigo-canonical-smiles mol2)))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-mol-file ,(car bindings)
-       (indigo-with-mol-file* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-query* (bindings &rest body)
-  "Load multiple query molecules from strings with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 QUERY-STRING1) (VAR2 QUERY-STRING2) ...)
-
-Example:
-  (indigo-with-query* ((query1 \"C=O\")
-                       (query2 \"C#N\"))
-    (list (indigo-smiles query1)
-          (indigo-smiles query2)))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-query ,(car bindings)
-       (indigo-with-query* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-query-file* (bindings &rest body)
-  "Load multiple query molecules from files with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 FILENAME1) (VAR2 FILENAME2) ...)
-
-Example:
-  (indigo-with-query-file* ((query1 \"query1.mol\")
-                            (query2 \"query2.mol\"))
-    (indigo-count-atoms query1))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-query-file ,(car bindings)
-       (indigo-with-query-file* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-smarts* (bindings &rest body)
-  "Load multiple SMARTS patterns from strings with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 SMARTS-STRING1) (VAR2 SMARTS-STRING2) ...)
-
-Example:
-  (indigo-with-smarts* ((pattern1 \"[#6]=[#8]\")
-                        (pattern2 \"[#7]\"))
-    (list (indigo-smiles pattern1)
-          (indigo-smiles pattern2)))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-smarts ,(car bindings)
-       (indigo-with-smarts* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-smarts-file* (bindings &rest body)
-  "Load multiple SMARTS patterns from files with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 FILENAME1) (VAR2 FILENAME2) ...)
-
-Example:
-  (indigo-with-smarts-file* ((pattern1 \"pattern1.sma\")
-                             (pattern2 \"pattern2.sma\"))
-    (indigo-smiles pattern1))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-smarts-file ,(car bindings)
-       (indigo-with-smarts-file* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-fingerprint* (bindings &rest body)
-  "Generate multiple fingerprints with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 OBJ1 TYPE1) (VAR2 OBJ2 TYPE2) ...)
-
-TYPE can be \"sim\" (similarity) or \"sub\" (substructure).
-
-Example:
-  (indigo-with-molecule* ((mol1 \"CCO\")
-                          (mol2 \"c1ccccc1\"))
-    (indigo-with-fingerprint* ((fp1 mol1 \"sim\")
-                               (fp2 mol2 \"sim\"))
-      (indigo-similarity fp1 fp2)))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-fingerprint ,(car bindings)
-       (indigo-with-fingerprint* ,(cdr bindings)
-         ,@body))))
-
-(defmacro indigo-with-matcher* (bindings &rest body)
-  "Create multiple substructure matchers with automatic cleanup.
-
-BINDINGS is a list of bindings: ((VAR1 TARGET1) (VAR2 TARGET2) ...)
-
-Example:
-  (indigo-with-molecule* ((mol1 \"c1ccccc1CCO\")
-                          (mol2 \"CCN\"))
-    (indigo-with-matcher* ((matcher1 mol1)
-                           (matcher2 mol2))
-      (list matcher1 matcher2)))"
-  (declare (indent 1))
-  (if (null bindings)
-      `(progn ,@body)
-    `(indigo-with-matcher ,(car bindings)
-       (indigo-with-matcher* ,(cdr bindings)
-         ,@body))))
+;; Auto-generate sequential binding versions using define-indigo-with*
+(define-indigo-with* "molecule")
+(define-indigo-with* "mol-file")
+(define-indigo-with* "query")
+(define-indigo-with* "query-file")
+(define-indigo-with* "smarts")
+(define-indigo-with* "smarts-file")
+(define-indigo-with* "fingerprint")
+(define-indigo-with* "matcher")
 
 (defmacro indigo-with-mol-file (binding &rest body)
   "Load molecule from file with automatic cleanup.

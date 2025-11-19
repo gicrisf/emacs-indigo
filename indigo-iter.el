@@ -269,6 +269,18 @@ BODY is executed with the iterator, which is freed on exit."
            (progn ,@body)
          (when ,var (indigo-free ,var))))))
 
+;; Auto-generate sequential binding versions for all iterator macros
+(define-indigo-with* "atoms-iterator")
+(define-indigo-with* "bonds-iterator")
+(define-indigo-with* "neighbors-iterator")
+(define-indigo-with* "components-iterator")
+(define-indigo-with* "sssr-iterator")
+(define-indigo-with* "rings-iterator")
+(define-indigo-with* "subtrees-iterator")
+(define-indigo-with* "stereocenters-iterator")
+(define-indigo-with* "reactants-iterator")
+(define-indigo-with* "products-iterator")
+
 (provide 'indigo-iter)
 
 ;;; indigo-iter.el ends here

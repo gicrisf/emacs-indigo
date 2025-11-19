@@ -297,6 +297,494 @@
           ;; Should have remaining 4 carbons
           (should (equal '("C" "C" "C" "C") collected)))))))
 
+;;; Stream Take Operations
+
+(ert-deftest test-indigo-stream-take-basic ()
+  "Test basic stream take operation."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane (6 carbons)
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((first-three (indigo-stream-take 3 stream))
+             (symbols (indigo-stream-map #'indigo-symbol first-three))
+             (collected (indigo-stream-collect symbols)))
+        ;; Should have exactly 3 carbons
+        (should (equal '("C" "C" "C") collected))))))
+
+(ert-deftest test-indigo-stream-take-zero ()
+  "Test that taking 0 elements returns empty stream."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((taken (indigo-stream-take 0 stream)))
+        ;; Should be empty stream
+        (should (indigo-stream-empty-p taken))))))
+
+(ert-deftest test-indigo-stream-take-more-than-available ()
+  "Test taking more elements than available."
+  (indigo-with-molecule (mol "CCO")  ; 3 atoms
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((taken (indigo-stream-take 10 stream))
+             (symbols (indigo-stream-map #'indigo-symbol taken))
+             (collected (indigo-stream-collect symbols)))
+        ;; Should only have 3 atoms (all available)
+        (should (equal '("C" "C" "O") collected))))))
+
+(ert-deftest test-indigo-stream-take-one ()
+  "Test taking exactly one element."
+  (indigo-with-molecule (mol "CCCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((first-one (indigo-stream-take 1 stream))
+             (symbol (indigo-stream-first first-one)))
+        ;; Should have first carbon
+        (should (equal "C" (indigo-symbol symbol)))
+        ;; Rest should be empty
+        (should (indigo-stream-empty-p (indigo-stream-rest first-one)))))))
+
+(ert-deftest test-indigo-stream-take-laziness ()
+  "Test that take is lazy - doesn't force unnecessary elements."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane (6 carbons)
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((count 0)
+             ;; Map with side-effect counter
+             (counted (indigo-stream-map
+                       (lambda (atom)
+                         (setq count (1+ count))
+                         (indigo-symbol atom))
+                       stream))
+             ;; Take only 3 elements
+             (taken (indigo-stream-take 3 counted)))
+        ;; Counter should still be 0 (nothing forced yet)
+        (should (= 0 count))
+        ;; Force first element
+        (indigo-stream-first taken)
+        (should (= 1 count))
+        ;; Collect all - should only force 3 total
+        (indigo-stream-collect taken)
+        (should (= 3 count))))))
+
+(ert-deftest test-indigo-stream-take-composition ()
+  "Test composing take with multiple maps."
+  (indigo-with-molecule (mol "CCCCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((first-four (indigo-stream-take 4 stream))
+             (symbols (indigo-stream-map #'indigo-symbol first-four))
+             (lower (indigo-stream-map #'downcase symbols))
+             (prefixed (indigo-stream-map
+                        (lambda (s) (concat "atom-" s))
+                        lower))
+             (collected (indigo-stream-collect prefixed)))
+        ;; Should have exactly 4 transformed elements
+        (should (equal '("atom-c" "atom-c" "atom-c" "atom-c") collected))))))
+
+(ert-deftest test-indigo-stream-take-after-consumption ()
+  "Test taking from a partially consumed stream."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane
+    (indigo-with-atoms-stream (stream mol)
+      (let ((symbols (indigo-stream-map #'indigo-symbol stream)))
+        ;; Consume first 2 elements
+        (indigo-stream-first symbols)
+        (setq symbols (indigo-stream-rest symbols))
+        (indigo-stream-first symbols)
+        (setq symbols (indigo-stream-rest symbols))
+        ;; Take next 2 from remaining 4
+        (let* ((next-two (indigo-stream-take 2 symbols))
+               (collected (indigo-stream-collect next-two)))
+          ;; Should have 2 carbons
+          (should (equal '("C" "C") collected)))))))
+
+(ert-deftest test-indigo-stream-take-empty-stream ()
+  "Test taking from an empty stream."
+  (indigo-with-molecule (mol "C")
+    (indigo-with-atoms-stream (stream mol)
+      ;; Advance to empty
+      (setq stream (indigo-stream-rest stream))
+      (let ((taken (indigo-stream-take 5 stream)))
+        ;; Should be empty
+        (should (indigo-stream-empty-p taken))))))
+
+(ert-deftest test-indigo-stream-take-bonds ()
+  "Test taking bond elements."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane has 5 bonds
+    (indigo-with-bonds-stream (stream mol)
+      (let* ((first-three (indigo-stream-take 3 stream))
+             (orders (indigo-stream-map #'indigo-bond-order first-three))
+             (collected (indigo-stream-collect orders)))
+        ;; Should have exactly 3 single bonds
+        (should (equal '(:single :single :single) collected))))))
+
+(ert-deftest test-indigo-stream-take-preserves-memoization ()
+  "Test that take preserves stream memoization."
+  (indigo-with-molecule (mol "CCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((count 0)
+             ;; Map with side-effect counter
+             (counted (indigo-stream-map
+                       (lambda (atom)
+                         (setq count (1+ count))
+                         (indigo-symbol atom))
+                       stream))
+             (taken (indigo-stream-take 2 counted)))
+        ;; Access first element twice
+        (indigo-stream-first taken)
+        (indigo-stream-first taken)
+        ;; Should only increment count once (memoized)
+        (should (= 1 count))))))
+
+;;; Stream Filter Operations
+
+(ert-deftest test-indigo-stream-filter-basic ()
+  "Test basic stream filter operation."
+  (indigo-with-molecule (mol "CCO")  ; Ethanol
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       stream))
+             (symbols (indigo-stream-map #'indigo-symbol carbons))
+             (collected (indigo-stream-collect symbols)))
+        ;; Should have exactly 2 carbons
+        (should (equal '("C" "C") collected))))))
+
+(ert-deftest test-indigo-stream-filter-all-match ()
+  "Test filtering when all elements match."
+  (indigo-with-molecule (mol "CCCCCC")  ; Hexane - all carbons
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       stream))
+             (collected (indigo-stream-collect carbons)))
+        ;; Should have all 6 atoms
+        (should (= 6 (length collected)))))))
+
+(ert-deftest test-indigo-stream-filter-none-match ()
+  "Test filtering when no elements match."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((nitrogens (indigo-stream-filter
+                         (lambda (atom)
+                           (equal (indigo-symbol atom) "N"))
+                         stream))
+             (collected (indigo-stream-collect nitrogens)))
+        ;; Should be empty
+        (should (equal '() collected))))))
+
+(ert-deftest test-indigo-stream-filter-charged-atoms ()
+  "Test filtering for charged atoms."
+  (indigo-with-molecule (mol "[O-]CCO")  ; Ethoxide ion
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((charged (indigo-stream-filter
+                       (lambda (atom)
+                         (not (= 0 (indigo-charge atom))))
+                       stream))
+             (charges (indigo-stream-map #'indigo-charge charged))
+             (collected (indigo-stream-collect charges)))
+        ;; Should have one charged atom with charge -1
+        (should (equal '(-1) collected))))))
+
+(ert-deftest test-indigo-stream-filter-laziness ()
+  "Test that filter is lazy - doesn't force unnecessary elements."
+  (indigo-with-molecule (mol "CCCCCO")  ; Pentanol
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((count 0)
+             ;; Map with side-effect counter
+             (counted (indigo-stream-map
+                       (lambda (atom)
+                         (setq count (1+ count))
+                         atom)
+                       stream))
+             ;; Filter for carbons only
+             (carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       counted)))
+        ;; Counter should still be 0 (nothing forced yet)
+        (should (= 0 count))
+        ;; Force first element - should only check elements until first carbon
+        (indigo-stream-first carbons)
+        (should (= 1 count))))))
+
+(ert-deftest test-indigo-stream-filter-composition ()
+  "Test composing filter with map and take."
+  (indigo-with-molecule (mol "CCCCCCCO")  ; Heptanol
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       stream))
+             (first-three (indigo-stream-take 3 carbons))
+             (indices (indigo-stream-map #'indigo-index first-three))
+             (collected (indigo-stream-collect indices)))
+        ;; Should have indices of first 3 carbons
+        (should (equal '(0 1 2) collected))))))
+
+(ert-deftest test-indigo-stream-filter-multiple-filters ()
+  "Test chaining multiple filters."
+  (indigo-with-molecule (mol "c1ccccc1")  ; Benzene (aromatic carbons)
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       stream))
+             ;; Filter for even indices
+             (even-indices (indigo-stream-filter
+                            (lambda (atom)
+                              (= 0 (mod (indigo-index atom) 2)))
+                            carbons))
+             (indices (indigo-stream-map #'indigo-index even-indices))
+             (collected (indigo-stream-collect indices)))
+        ;; Should have indices 0, 2, 4
+        (should (equal '(0 2 4) collected))))))
+
+(ert-deftest test-indigo-stream-filter-after-map ()
+  "Test filtering after mapping."
+  (indigo-with-molecule (mol "CCCCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((symbols (indigo-stream-map #'indigo-symbol stream))
+             ;; Filter for carbons by symbol string
+             (carbons (indigo-stream-filter
+                       (lambda (sym) (equal sym "C"))
+                       symbols))
+             (collected (indigo-stream-collect carbons)))
+        ;; Should have 4 "C" symbols
+        (should (equal '("C" "C" "C" "C") collected))))))
+
+(ert-deftest test-indigo-stream-filter-empty-stream ()
+  "Test filtering an empty stream."
+  (indigo-with-molecule (mol "C")
+    (indigo-with-atoms-stream (stream mol)
+      ;; Advance to empty
+      (setq stream (indigo-stream-rest stream))
+      (let* ((filtered (indigo-stream-filter
+                        (lambda (atom) t)
+                        stream))
+             (collected (indigo-stream-collect filtered)))
+        ;; Should be empty
+        (should (equal '() collected))))))
+
+(ert-deftest test-indigo-stream-filter-preserves-memoization ()
+  "Test that filter preserves stream memoization."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((count 0)
+             ;; Map with side-effect counter
+             (counted (indigo-stream-map
+                       (lambda (atom)
+                         (setq count (1+ count))
+                         atom)
+                       stream))
+             (carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       counted)))
+        ;; Access first element twice
+        (indigo-stream-first carbons)
+        (indigo-stream-first carbons)
+        ;; Should only increment count once (memoized)
+        (should (= 1 count))))))
+
+(ert-deftest test-indigo-stream-filter-bonds ()
+  "Test filtering bond elements."
+  (indigo-with-molecule (mol "C=CC")  ; Propene (double and single bonds)
+    (indigo-with-bonds-stream (stream mol)
+      (let* ((double-bonds (indigo-stream-filter
+                            (lambda (bond)
+                              (eq (indigo-bond-order bond) :double))
+                            stream))
+             (collected (indigo-stream-collect double-bonds)))
+        ;; Should have exactly 1 double bond
+        (should (= 1 (length collected)))))))
+
+;;; Stream Fold Operations
+
+(ert-deftest test-indigo-stream-fold-sum ()
+  "Test folding to sum atom indices."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((sum (indigo-stream-fold
+                  (lambda (acc atom)
+                    (+ acc (indigo-index atom)))
+                  0
+                  stream)))
+        ;; Should sum indices: 0 + 1 + 2 = 3
+        (should (= 3 sum))))))
+
+(ert-deftest test-indigo-stream-fold-count ()
+  "Test folding to count specific atoms."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((carbon-count (indigo-stream-fold
+                           (lambda (acc atom)
+                             (if (equal (indigo-symbol atom) "C")
+                                 (1+ acc)
+                               acc))
+                           0
+                           stream)))
+        ;; Should count 2 carbons
+        (should (= 2 carbon-count))))))
+
+(ert-deftest test-indigo-stream-fold-concat ()
+  "Test folding to build a string."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((formula (indigo-stream-fold
+                      (lambda (acc atom)
+                        (concat acc (indigo-symbol atom)))
+                      ""
+                      stream)))
+        ;; Should build "CCO"
+        (should (equal "CCO" formula))))))
+
+(ert-deftest test-indigo-stream-fold-max ()
+  "Test folding to find maximum value."
+  (indigo-with-molecule (mol "[O-]C[NH3+]")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((max-charge (indigo-stream-fold
+                         (lambda (acc atom)
+                           (max acc (indigo-charge atom)))
+                         most-negative-fixnum
+                         stream)))
+        ;; Should find max charge of +1
+        (should (= 1 max-charge))))))
+
+(ert-deftest test-indigo-stream-fold-min ()
+  "Test folding to find minimum value."
+  (indigo-with-molecule (mol "[O-]C[NH3+]")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((min-charge (indigo-stream-fold
+                         (lambda (acc atom)
+                           (min acc (indigo-charge atom)))
+                         most-positive-fixnum
+                         stream)))
+        ;; Should find min charge of -1
+        (should (= -1 min-charge))))))
+
+(ert-deftest test-indigo-stream-fold-empty ()
+  "Test folding an empty stream."
+  (indigo-with-molecule (mol "C")
+    (indigo-with-atoms-stream (stream mol)
+      ;; Advance to empty
+      (setq stream (indigo-stream-rest stream))
+      (let ((result (indigo-stream-fold
+                     (lambda (acc atom) (1+ acc))
+                     0
+                     stream)))
+        ;; Should return initial value unchanged
+        (should (= 0 result))))))
+
+(ert-deftest test-indigo-stream-fold-build-list ()
+  "Test folding to build a list (like collect)."
+  (indigo-with-molecule (mol "CCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((symbols-stream (indigo-stream-map #'indigo-symbol stream))
+             (result (indigo-stream-fold
+                      (lambda (acc sym) (cons sym acc))
+                      nil
+                      symbols-stream)))
+        ;; Should build reversed list
+        (should (equal '("O" "C" "C") result))
+        ;; Nreverse to get same order as collect
+        (should (equal '("C" "C" "O") (nreverse result)))))))
+
+(ert-deftest test-indigo-stream-fold-with-filter ()
+  "Test folding after filtering."
+  (indigo-with-molecule (mol "CCCCCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((carbons (indigo-stream-filter
+                       (lambda (atom)
+                         (equal (indigo-symbol atom) "C"))
+                       stream))
+             (indices (indigo-stream-map #'indigo-index carbons))
+             (sum (indigo-stream-fold #'+ 0 indices)))
+        ;; Should sum indices of 5 carbons: 0+1+2+3+4 = 10
+        (should (= 10 sum))))))
+
+(ert-deftest test-indigo-stream-fold-with-take ()
+  "Test folding after taking elements."
+  (indigo-with-molecule (mol "CCCCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((first-three (indigo-stream-take 3 stream))
+             (indices (indigo-stream-map #'indigo-index first-three))
+             (sum (indigo-stream-fold #'+ 0 indices)))
+        ;; Should sum first 3 indices: 0+1+2 = 3
+        (should (= 3 sum))))))
+
+(ert-deftest test-indigo-stream-fold-product ()
+  "Test folding to compute product."
+  (indigo-with-molecule (mol "CCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((indices (indigo-stream-map
+                       (lambda (atom) (1+ (indigo-index atom)))
+                       stream))
+             (product (indigo-stream-fold #'* 1 indices)))
+        ;; Should compute 1 * 2 * 3 * 4 = 24
+        (should (= 24 product))))))
+
+(ert-deftest test-indigo-stream-fold-complex-accumulator ()
+  "Test folding with complex accumulator (alist)."
+  (indigo-with-molecule (mol "CCCOO")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((symbols (indigo-stream-map #'indigo-symbol stream))
+             (counts (indigo-stream-fold
+                      (lambda (acc sym)
+                        (let ((entry (assoc sym acc)))
+                          (if entry
+                              (progn
+                                (setcdr entry (1+ (cdr entry)))
+                                acc)
+                            (cons (cons sym 1) acc))))
+                      nil
+                      symbols)))
+        ;; Should count: C=3, O=2
+        (should (= 3 (cdr (assoc "C" counts))))
+        (should (= 2 (cdr (assoc "O" counts))))))))
+
+(ert-deftest test-indigo-stream-fold-all-match ()
+  "Test folding to check if all elements match predicate."
+  (indigo-with-molecule (mol "CCCCCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((all-carbons (indigo-stream-fold
+                          (lambda (acc atom)
+                            (and acc (equal (indigo-symbol atom) "C")))
+                          t
+                          stream)))
+        ;; Should be true - all are carbons
+        (should (eq t all-carbons))))))
+
+(ert-deftest test-indigo-stream-fold-any-match ()
+  "Test folding to check if any element matches predicate."
+  (indigo-with-molecule (mol "CCCO")
+    (indigo-with-atoms-stream (stream mol)
+      (let ((has-oxygen (indigo-stream-fold
+                         (lambda (acc atom)
+                           (or acc (equal (indigo-symbol atom) "O")))
+                         nil
+                         stream)))
+        ;; Should be true - has oxygen
+        (should (eq t has-oxygen))))))
+
+(ert-deftest test-indigo-stream-fold-bonds ()
+  "Test folding over bonds."
+  (indigo-with-molecule (mol "C=CC")  ; Propene
+    (indigo-with-bonds-stream (stream mol)
+      (let ((bond-count (indigo-stream-fold
+                         (lambda (acc bond) (1+ acc))
+                         0
+                         stream)))
+        ;; Should have 2 bonds
+        (should (= 2 bond-count))))))
+
+(ert-deftest test-indigo-stream-fold-left-associative ()
+  "Test that fold is left-associative."
+  (indigo-with-molecule (mol "CCC")
+    (indigo-with-atoms-stream (stream mol)
+      (let* ((indices (indigo-stream-map #'indigo-index stream))
+             (result (indigo-stream-fold
+                      (lambda (acc idx)
+                        (format "(%s-%d)" acc idx))
+                      "X"
+                      indices)))
+        ;; Should build left-to-right: (((X-0)-1)-2)
+        (should (equal "(((X-0)-1)-2)" result))))))
+
 ;;; With-style Macro Tests
 
 ;; Commented because this is mostly a debugging tool

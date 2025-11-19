@@ -16,7 +16,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;; Author: Giovanni Crisalfi
-;; Version: 0.8.0
+;; Version: 0.10.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: data tools extensions
 ;; URL: https://github.com/gicrisf/emacs-indigo
@@ -57,6 +57,40 @@
 (declare-function indigo-free "indigo-module")
 (declare-function indigo-clone "indigo-module")
 (declare-function indigo-get-last-error "indigo-module")
+
+;;; Macro Generation Utilities
+
+(defmacro define-indigo-with* (base-name)
+  "Auto-generate a sequential binding version (*) of an indigo-with- macro.
+
+Given BASE-NAME (e.g., \"molecule\"), creates `indigo-with-molecule*' that
+wraps `indigo-with-molecule' with sequential binding semantics (like let*).
+
+The generated macro accepts multiple bindings and evaluates them sequentially,
+ensuring proper cleanup for each resource even if a later binding fails.
+
+Example usage:
+  (define-indigo-with* \"molecule\")
+  ;; Creates indigo-with-molecule* from indigo-with-molecule
+
+The generated macro can then be used like:
+  (indigo-with-molecule* ((mol1 \"CCO\")
+                          (mol2 \"c1ccccc1\"))
+    (list mol1 mol2))"
+  (let* ((base-macro (intern (format "indigo-with-%s" base-name)))
+         (star-macro (intern (format "indigo-with-%s*" base-name))))
+    `(defmacro ,star-macro (bindings &rest body)
+       ,(format "Sequential binding version of `%s'.
+
+BINDINGS is a list of bindings: ((VAR1 ARG1...) (VAR2 ARG2...) ...)
+Bindings are evaluated sequentially (like let*) with automatic cleanup."
+                base-macro)
+       (declare (indent 1))
+       (if (null bindings)
+           `(progn ,@body)
+         `(,',base-macro ,(car bindings)
+            (,',star-macro ,(cdr bindings)
+              ,@body))))))
 
 ;;; Module Loading
 

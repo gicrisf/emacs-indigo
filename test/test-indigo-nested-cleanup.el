@@ -378,6 +378,74 @@
     ;; All freed
     (should (= (indigo-count-references) initial-refs))))
 
+;;; Tests for star macro generator (define-indigo-with*)
+
+(ert-deftest test-star-macro-generator ()
+  "Test that star macros work with different resource types."
+  (let ((initial-refs (indigo-count-references)))
+    ;; Test with iterators
+    (indigo-with-molecule* ((mol1 "CCO")
+                            (mol2 "CC"))
+      (indigo-with-atoms-iterator* ((atoms1 mol1)
+                                    (atoms2 mol2))
+        (should (>= (indigo-count-references) (+ initial-refs 2)))
+        ;; Count atoms manually to verify iterators work
+        (let ((count1 0)
+              (count2 0)
+              (atom nil))
+          (setq atom (indigo-next atoms1))
+          (while atom
+            (setq count1 (1+ count1))
+            (indigo-free atom)
+            (setq atom (indigo-next atoms1)))
+          (setq atom (indigo-next atoms2))
+          (while atom
+            (setq count2 (1+ count2))
+            (indigo-free atom)
+            (setq atom (indigo-next atoms2)))
+          (should (= count1 3))
+          (should (= count2 2)))))
+
+    ;; All resources cleaned up
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-star-macro-generator-error-handling ()
+  "Test that star macros handle errors correctly with cleanup."
+  (let ((initial-refs (indigo-count-references)))
+    ;; Test error in body
+    (should-error
+     (indigo-with-reaction* ((rxn1 "C>>CC")
+                             (rxn2 "CC>>CCC"))
+       (error "Test error in body")))
+
+    ;; All resources cleaned up despite error
+    (should (= (indigo-count-references) initial-refs))))
+
+(ert-deftest test-star-macro-empty-bindings ()
+  "Test that empty bindings list works correctly."
+  (should (equal (indigo-with-molecule* ()
+                   "test-value")
+                 "test-value")))
+
+(ert-deftest test-star-macro-single-binding ()
+  "Test that single binding works (edge case between base and * version)."
+  (should (numberp
+           (indigo-with-molecule* ((mol "CCO"))
+             (indigo-molecular-weight mol)))))
+
+(ert-deftest test-star-macro-three-bindings ()
+  "Test with three bindings to ensure recursion works properly."
+  (let ((result
+         (indigo-with-molecule* ((mol1 "C")
+                                 (mol2 "CC")
+                                 (mol3 "CCC"))
+           (list (indigo-molecular-weight mol1)
+                 (indigo-molecular-weight mol2)
+                 (indigo-molecular-weight mol3)))))
+    (should (listp result))
+    (should (= (length result) 3))
+    (should (cl-every #'numberp result))))
+
 (provide 'test-indigo-nested-cleanup)
 
 ;;; test-indigo-nested-cleanup.el ends here
