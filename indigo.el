@@ -16,7 +16,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;; Author: Giovanni Crisalfi
-;; Version: 0.10.0
+;; Version: 0.10.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: data tools extensions
 ;; URL: https://github.com/gicrisf/emacs-indigo
@@ -127,6 +127,9 @@ Bindings are evaluated sequentially (like let*) with automatic cleanup."
 (require 'indigo-render)
 (require 'indigo-mol)
 (require 'indigo-react)
+
+;; Generate star macro versions after all base macros are defined
+(require 'indigo-with-star-defs)
 
 (provide 'indigo)
 

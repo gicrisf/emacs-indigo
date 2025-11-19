@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## Version 0.10.1 (2025-11-19)
+
+### Summary
+
+Minor refactoring release that improves code organization by consolidating all `define-indigo-with*` macro definitions into a dedicated manifest file.
+
+### Changes
+
+- **New `indigo-with-star-defs.el` module**: Centralizes the `define-indigo-with*` meta-macro and all star macro definitions in one place, serving as a manifest for all sequential binding macros
+- **Cleaner module structure**: Removed scattered `define-indigo-with*` calls from individual modules (`indigo-mol.el`, `indigo-react.el`, `indigo-stream.el`, `indigo-stream-iter.el`, `indigo-render.el`, `indigo-iter.el`)
+- **Better dependency ordering**: Star macros are now generated after all base macros are loaded
+
+---
+
 ## Version 0.10.0 (2025-11-17)
 
 ### Summary

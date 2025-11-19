@@ -254,18 +254,6 @@ Example:
            (progn ,@body)
          (when ,var (indigo-free ,var))))))
 
-;;; Sequential Multiple Binding Macros (with * suffix, like let*)
-
-;; Auto-generate sequential binding versions using define-indigo-with*
-(define-indigo-with* "molecule")
-(define-indigo-with* "mol-file")
-(define-indigo-with* "query")
-(define-indigo-with* "query-file")
-(define-indigo-with* "smarts")
-(define-indigo-with* "smarts-file")
-(define-indigo-with* "fingerprint")
-(define-indigo-with* "matcher")
-
 (defmacro indigo-with-mol-file (binding &rest body)
   "Load molecule from file with automatic cleanup.
 
