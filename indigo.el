@@ -92,44 +92,145 @@ Bindings are evaluated sequentially (like let*) with automatic cleanup."
             (,',star-macro ,(cdr bindings)
               ,@body))))))
 
+;;; Installation
+
+(defvar indigo-install-directory
+  (file-name-directory (or load-file-name buffer-file-name))
+  "Directory where emacs-indigo is installed.")
+
+(defun indigo-install (&optional no-confirm)
+  "Install the Indigo library and build the dynamic module.
+
+This function runs the installation scripts to:
+1. Download and build dependencies (zlib, TinyXML)
+2. Download and extract the Indigo cheminformatics library
+3. Compile the Emacs dynamic module
+
+With prefix argument NO-CONFIRM, skip the confirmation prompt.
+
+After installation, use `indigo-doctor' to verify."
+  (interactive "P")
+  (let* ((pkg-dir indigo-install-directory)
+         (install-script (expand-file-name "install.sh" pkg-dir))
+         (buffer-name "*indigo-install*"))
+    (unless (file-exists-p install-script)
+      (error "Installation script not found at %s" install-script))
+    (when (or no-confirm
+              (yes-or-no-p "This will download and compile the Indigo library. Continue? "))
+      (with-current-buffer (get-buffer-create buffer-name)
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert (format "=== Installing Emacs Indigo ===\n"))
+          (insert (format "Working directory: %s\n\n" pkg-dir))))
+      (pop-to-buffer buffer-name)
+      (let ((default-directory pkg-dir)
+            (process-environment (cons "TERM=dumb" process-environment)))
+        (set-process-sentinel
+         (start-process "indigo-install" buffer-name "bash" install-script)
+         (lambda (process event)
+           (when (memq (process-status process) '(exit signal))
+             (with-current-buffer (process-buffer process)
+               (let ((inhibit-read-only t))
+                 (goto-char (point-max))
+                 (if (zerop (process-exit-status process))
+                     (progn
+                       (insert "\n\n=== Installation successful! ===\n")
+                       (insert "Run M-x indigo-doctor to verify.\n")
+                       (insert "Then restart Emacs or eval (require 'indigo) to load.\n")
+                       (message "Indigo installation completed successfully!"))
+                   (insert "\n\n=== Installation failed! ===\n")
+                   (insert "Check the output above for errors.\n")
+                   (message "Indigo installation failed. See *indigo-install* buffer.")))))))))))
+
+(defun indigo-doctor ()
+  "Check if Indigo is properly installed and the module can be loaded.
+
+Returns t if everything is OK, nil otherwise."
+  (interactive)
+  (let* ((pkg-dir indigo-install-directory)
+         (module-path (expand-file-name "build/indigo-module.so" pkg-dir))
+         (indigo-dir (expand-file-name "indigo-install" pkg-dir))
+         (deps-dir (expand-file-name "deps-install" pkg-dir))
+         (issues nil))
+    ;; Check dependencies
+    (unless (file-exists-p (expand-file-name "lib/libz.a" deps-dir))
+      (push "zlib not found in deps-install/lib/" issues))
+    (unless (file-exists-p (expand-file-name "lib/libtinyxml.a" deps-dir))
+      (push "TinyXML not found in deps-install/lib/" issues))
+    ;; Check Indigo library
+    (unless (file-exists-p (expand-file-name "lib/libindigo-static.a" indigo-dir))
+      (push "Indigo library not found in indigo-install/lib/" issues))
+    (unless (file-exists-p (expand-file-name "include/indigo.h" indigo-dir))
+      (push "Indigo headers not found in indigo-install/include/" issues))
+    ;; Check module
+    (unless (file-exists-p module-path)
+      (push "Dynamic module (indigo-module.so) not found in build/" issues))
+    ;; Report results
+    (if issues
+        (progn
+          (message "Indigo installation issues:\n  - %s\nRun M-x indigo-install to fix."
+                   (mapconcat #'identity (nreverse issues) "\n  - "))
+          nil)
+      (message "Indigo installation OK: all components found.")
+      t)))
+
+(defun indigo-installed-p ()
+  "Return non-nil if Indigo appears to be installed."
+  (let* ((pkg-dir indigo-install-directory)
+         (module-path (expand-file-name "build/indigo-module.so" pkg-dir)))
+    (file-exists-p module-path)))
+
 ;;; Module Loading
 
-;; Load the compiled module
+(defvar indigo--module-loaded nil
+  "Non-nil if the Indigo dynamic module has been loaded.")
+
 (defun indigo-load-module ()
-  "Load the indigo dynamic module, building it first if necessary."
-  (let* ((pkg-dir (file-name-directory (or load-file-name buffer-file-name)))
-         (module-path (expand-file-name "build/indigo-module.so" pkg-dir))
-         (indigo-dir (expand-file-name "indigo-install" pkg-dir)))
-    ;; Check if Indigo library is installed
-    (unless (file-directory-p indigo-dir)
-      (error "Indigo library not found. Run './install.sh' in %s" pkg-dir))
-    ;; Build module if it doesn't exist
-    (unless (file-exists-p module-path)
-      (message "Indigo module not found, building...")
-      (let ((default-directory pkg-dir))
-        (unless (zerop (call-process "make" nil "*indigo-build*" nil))
-          (error "Failed to build indigo module. Check *indigo-build* buffer for details"))))
-    ;; Load the module
-    (if (file-exists-p module-path)
+  "Load the indigo dynamic module and submodules.
+
+If the module is not built, prints a message directing the user
+to run `indigo-install'.  Returns non-nil if loading succeeded."
+  (interactive)
+  (if indigo--module-loaded
+      t
+    (let* ((pkg-dir indigo-install-directory)
+           (module-path (expand-file-name "build/indigo-module.so" pkg-dir))
+           (indigo-dir (expand-file-name "indigo-install" pkg-dir)))
+      (cond
+       ;; Module exists - load it
+       ((file-exists-p module-path)
         (module-load module-path)
-      (error "Indigo module not found at %s. Run 'make' in %s" module-path pkg-dir))))
+        ;; Load module components
+        (require 'indigo-bond)
+        (require 'indigo-atom)
+        (require 'indigo-io)
+        (require 'indigo-iter)
+        (require 'indigo-stream)
+        (require 'indigo-stream-iter)
+        (require 'indigo-render)
+        (require 'indigo-mol)
+        (require 'indigo-react)
+        ;; Generate star macro versions after all base macros are defined
+        (require 'indigo-with-star-defs)
+        (setq indigo--module-loaded t)
+        (message "Indigo module loaded successfully.")
+        t)
+       ;; Indigo library installed but module not built - try building
+       ((file-directory-p indigo-dir)
+        (message "Indigo module not found, building...")
+        (let ((default-directory pkg-dir))
+          (if (zerop (call-process "make" nil "*indigo-build*" nil))
+              (indigo-load-module)  ; Retry after building
+            (message "Failed to build indigo module. Check *indigo-build* buffer.")
+            nil)))
+       ;; Nothing installed
+       (t
+        (message "Indigo not installed. Run M-x indigo-install first.")
+        nil)))))
 
-;; Load the module when this file is loaded
+;; Try to load the module, but don't error if it's not available
+;; This allows the package to be loaded for running indigo-install
 (indigo-load-module)
-
-;; Load module components
-(require 'indigo-bond)
-(require 'indigo-atom)
-(require 'indigo-io)
-(require 'indigo-iter)
-(require 'indigo-stream)
-(require 'indigo-stream-iter)
-(require 'indigo-render)
-(require 'indigo-mol)
-(require 'indigo-react)
-
-;; Generate star macro versions after all base macros are defined
-(require 'indigo-with-star-defs)
 
 (provide 'indigo)
 
