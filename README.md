@@ -24,27 +24,76 @@ Emacs Lisp bindings for the [Indigo](https://lifescience.opensource.epam.com/ind
 
 Areas still in development include advanced analysis features (scaffold detection, R-group deconvolution), SDF/RDF file iteration, and additional array/writer operations.
 
-## Build
+## Installation
 
-Requirements:
+### Requirements
+
 - Emacs 25.1+ with dynamic module support
-- GCC
-- Make
+- GCC, Make
+- Platform: Linux x86_64 (more platforms planned)
 
-```bash
-git clone https://github.com/gicrisf/emacs-indigo.git && emacs-indigo/install.sh
+### use-package / straight.el
+
+```elisp
+(use-package indigo
+  :straight (:host github
+             :repo "gicrisf/emacs-indigo"
+             :files (:defaults
+                     "Makefile"
+                     "install.sh"
+                     "install-indigo.sh"
+                     "install-dependencies.sh"
+                     ("src" "src/*.c")
+                     ("src" "src/*.h"))))
 ```
 
-The install script automatically:
-1. Builds and installs dependencies (zlib, TinyXML)
-2. Downloads and installs the Indigo library
-3. Compiles the Emacs dynamic module
+### Doom Emacs
 
-Tested on Linux and WSL, should work on any Unix-like system.
+Add to your `packages.el`:
 
-## Install
+```elisp
+(package! indigo
+  :recipe (:host github
+           :repo "gicrisf/emacs-indigo"
+           :files (:defaults
+                   "Makefile"
+                   "install.sh"
+                   "install-indigo.sh"
+                   "install-dependencies.sh"
+                   ("src" "src/*.c")
+                   ("src" "src/*.h"))))
+```
 
-Add to your config:
+Then in your `config.el`:
+
+```elisp
+(require 'indigo)
+```
+
+### Post-installation
+
+After adding the package, run `M-x indigo-install`. You'll be prompted to:
+1. Select your platform (currently `linux-x86_64`)
+2. Confirm the installation
+
+The installer automatically:
+- Downloads and builds dependencies (zlib, TinyXML)
+- Downloads the Indigo library for your platform
+- Compiles the Emacs dynamic module
+
+Run `M-x indigo-doctor` to verify the installation is complete.
+
+## Build from Source
+
+For development or manual builds:
+
+```bash
+git clone https://github.com/gicrisf/emacs-indigo.git
+cd emacs-indigo
+./install.sh linux-x86_64
+```
+
+Then add to your config:
 ```elisp
 (add-to-list 'load-path "/path/to/emacs-indigo")
 (require 'indigo)
