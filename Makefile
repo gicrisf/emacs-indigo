@@ -3,7 +3,7 @@ CC = gcc
 INDIGO_DIR = indigo-install
 EMACS_SRC_DIR = $(shell $(EMACS) -Q --batch --eval '(princ (expand-file-name "../src"))')
 CFLAGS = -fPIC -I$(EMACS_SRC_DIR) -I$(INDIGO_DIR)/include
-LDFLAGS = -shared -L$(INDIGO_DIR)/lib -lindigo -lindigo-renderer
+LDFLAGS = -shared -L$(INDIGO_DIR)/lib -Wl,--start-group -lindigo-static -lindigo-renderer-static -Wl,--end-group -lstdc++ -lm -lz -ltinyxml -linchi
 
 all: build/indigo-module.so build/test-indigo
 
@@ -12,12 +12,12 @@ build/indigo-module.so: src/indigo-module.c src/indigo-stateless-utils.c src/ind
 
 # Test program to verify Indigo installation
 build/test-indigo: test/test-indigo.c | build
-	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -lindigo
+	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -Wl,--start-group -lindigo-static -Wl,--end-group -lstdc++ -lm -lz -ltinyxml -linchi
 
 # Test program to check renderer availability
 build/test-renderer-availability: test/test-renderer-availability.c | build
-	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -lindigo -lindigo-renderer || \
-	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -lindigo
+	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -Wl,--start-group -lindigo-static -lindigo-renderer-static -Wl,--end-group -lstdc++ -lm -lz -ltinyxml -linchi || \
+	$(CC) -I$(INDIGO_DIR)/include -o $@ $< -L$(INDIGO_DIR)/lib -Wl,--start-group -lindigo-static -Wl,--end-group -lstdc++ -lm -lz -ltinyxml -linchi
 
 build:
 	mkdir -p build
