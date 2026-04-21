@@ -1,7 +1,10 @@
 ;;; indigo-with-star-defs.el --- Sequential binding macro definitions -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
-;;
+
+;; Author: Giovanni Crisalfi
+;; Package-Requires: ((emacs "25.1"))
+
 ;; This file is part of emacs-indigo.
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -16,8 +19,6 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-;;
-;; Author: Giovanni Crisalfi
 
 ;;; Commentary:
 

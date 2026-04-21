@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## Version 0.11.0 (2026-04-21)
+
+### Summary
+
+MELPA preparation release with critical bug fixes and installation improvements. Fixes byte-compilation issues with macro generation and adds explicit platform selection for binary downloads.
+
+### Bug Fixes
+
+- **Fixed macro byte-compilation**: Separated `define-indigo-with*` meta-macro into standalone `indigo-macros.el` to resolve compilation ordering issues with package managers (Doom Emacs, straight.el)
+- **Fixed package headers**: Corrected header order in all files (Author/Version before license text) per Emacs packaging conventions
+- **Fixed documentation**: Added missing `BINDING` parameter documentation in all `indigo-with-*` macros for `checkdoc` compliance
+
+### New Features
+
+- **Explicit platform selection**: `indigo-install` now prompts user to select target platform from `indigo--available-platforms` list instead of auto-detection (currently supports `linux-x86_64`)
+- **Nix support**: Added `shell.nix` and `flake.nix` for reproducible development environment with proper Emacs module headers
+
+### Package Quality
+
+- All files pass `package-lint` cleanly (submodule warnings are expected false positives)
+- All files pass `checkdoc` with no issues
+- Added `Package-Requires: ((emacs "25.1"))` to all submodules
+- Proper GPL-3.0 license headers in all files
+
+---
+
 ## Version 0.10.1 (2025-11-19)
 
 ### Summary

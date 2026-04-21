@@ -2,6 +2,9 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
+;; Author: Giovanni Crisalfi
+;; Package-Requires: ((emacs "25.1"))
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -14,8 +17,6 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-;; Author: Giovanni Crisalfi
 
 ;;; Commentary:
 
@@ -240,7 +241,8 @@ PH-TOLERANCE is the acceptable pH range around the target."
 (defmacro indigo-with-molecule (binding &rest body)
   "Load molecule from string with automatic cleanup.
 
-Usage: (indigo-with-molecule (VAR MOL-STRING) BODY...)
+BINDING is (VAR MOL-STRING) where VAR is bound to the molecule handle.
+BODY is executed with the molecule, which is freed on exit.
 
 Example:
   (indigo-with-molecule (mol \"CCO\")
@@ -257,7 +259,8 @@ Example:
 (defmacro indigo-with-mol-file (binding &rest body)
   "Load molecule from file with automatic cleanup.
 
-Usage: (indigo-with-mol-file (VAR FILENAME) BODY...)
+BINDING is (VAR FILENAME) where VAR is bound to the molecule handle.
+BODY is executed with the molecule, which is freed on exit.
 
 Example:
   (indigo-with-mol-file (mol \"molecule.mol\")
@@ -273,7 +276,8 @@ Example:
 (defmacro indigo-with-query (binding &rest body)
   "Load query molecule from string with automatic cleanup.
 
-Usage: (indigo-with-query (VAR QUERY-STRING) BODY...)
+BINDING is (VAR QUERY-STRING) where VAR is bound to the query handle.
+BODY is executed with the query molecule, which is freed on exit.
 
 Example:
   (indigo-with-query (query \"C=O\")
@@ -289,7 +293,8 @@ Example:
 (defmacro indigo-with-query-file (binding &rest body)
   "Load query molecule from file with automatic cleanup.
 
-Usage: (indigo-with-query-file (VAR FILENAME) BODY...)
+BINDING is (VAR FILENAME) where VAR is bound to the query handle.
+BODY is executed with the query molecule, which is freed on exit.
 
 Example:
   (indigo-with-query-file (query \"query.mol\")
@@ -305,7 +310,8 @@ Example:
 (defmacro indigo-with-smarts (binding &rest body)
   "Load SMARTS pattern from string with automatic cleanup.
 
-Usage: (indigo-with-smarts (VAR SMARTS-STRING) BODY...)
+BINDING is (VAR SMARTS-STRING) where VAR is bound to the pattern handle.
+BODY is executed with the SMARTS pattern, which is freed on exit.
 
 Example:
   (indigo-with-smarts (pattern \"[#6]=[#8]\")
@@ -321,7 +327,8 @@ Example:
 (defmacro indigo-with-smarts-file (binding &rest body)
   "Load SMARTS pattern from file with automatic cleanup.
 
-Usage: (indigo-with-smarts-file (VAR FILENAME) BODY...)
+BINDING is (VAR FILENAME) where VAR is bound to the pattern handle.
+BODY is executed with the SMARTS pattern, which is freed on exit.
 
 Example:
   (indigo-with-smarts-file (pattern \"pattern.sma\")
@@ -337,9 +344,9 @@ Example:
 (defmacro indigo-with-fingerprint (binding &rest body)
   "Generate fingerprint with automatic cleanup.
 
-Usage: (indigo-with-fingerprint (VAR OBJ TYPE) BODY...)
-
+BINDING is (VAR OBJ TYPE) where VAR is bound to the fingerprint handle.
 TYPE can be \"sim\" (similarity) or \"sub\" (substructure).
+BODY is executed with the fingerprint, which is freed on exit.
 
 Example:
   (indigo-with-molecule (mol \"CCO\")
@@ -357,7 +364,8 @@ Example:
 (defmacro indigo-with-matcher (binding &rest body)
   "Create substructure matcher with automatic cleanup.
 
-Usage: (indigo-with-matcher (VAR TARGET) BODY...)
+BINDING is (VAR TARGET) where VAR is bound to the matcher handle.
+BODY is executed with the matcher, which is freed on exit.
 
 Example:
   (indigo-with-molecule (mol \"c1ccccc1CCO\")

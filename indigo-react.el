@@ -2,6 +2,9 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
+;; Author: Giovanni Crisalfi
+;; Package-Requires: ((emacs "25.1"))
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -14,8 +17,6 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-;; Author: Giovanni Crisalfi
 
 ;;; Commentary:
 
@@ -138,7 +139,8 @@ Example:
 (defmacro indigo-with-reaction (binding &rest body)
   "Load reaction from string with automatic cleanup.
 
-Usage: (indigo-with-reaction (VAR RXN-STRING) BODY...)
+BINDING is (VAR RXN-STRING) where VAR is bound to the reaction handle.
+BODY is executed with the reaction, which is freed on exit.
 
 Example:
   (indigo-with-reaction (rxn \"CC>>CCO\")
@@ -155,7 +157,8 @@ Example:
 (defmacro indigo-with-rxn-file (binding &rest body)
   "Load reaction from file with automatic cleanup.
 
-Usage: (indigo-with-rxn-file (VAR FILENAME) BODY...)
+BINDING is (VAR FILENAME) where VAR is bound to the reaction handle.
+BODY is executed with the reaction, which is freed on exit.
 
 Example:
   (indigo-with-rxn-file (rxn \"reaction.rxn\")

@@ -2,6 +2,9 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
+;; Author: Giovanni Crisalfi
+;; Package-Requires: ((emacs "25.1"))
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -14,9 +17,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-;;
-;; Author: Giovanni Crisalfi
-;;
+
 ;;; Commentary:
 
 ;; This module provides a lazy stream abstraction built on top of the
@@ -375,10 +376,10 @@ Example (collecting charges):
 (defmacro indigo-with-stream-from-iterator (binding &rest body)
   "Create a stream from an iterator with automatic element cleanup.
 
-Usage: (indigo-with-stream-from-iterator (STREAM-VAR ITERATOR-VAR) BODY...)
+BINDING is (STREAM-VAR ITERATOR-VAR) where STREAM-VAR is bound to the stream.
+BODY is executed with the stream.  All elements forced from the stream are
+tracked and automatically freed when exiting the scope.
 
-The stream is created from ITERATOR-VAR, and all elements forced from
-the stream are tracked and automatically freed when exiting the scope.
 The iterator itself should be managed by an outer `indigo-with-*-iterator'
 macro.
 

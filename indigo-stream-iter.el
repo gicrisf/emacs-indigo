@@ -2,6 +2,9 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
+;; Author: Giovanni Crisalfi
+;; Package-Requires: ((emacs "25.1"))
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -14,9 +17,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-;;
-;; Author: Giovanni Crisalfi
-;;
+
 ;;; Commentary:
 
 ;; This module provides high-level stream wrapper macros that combine
