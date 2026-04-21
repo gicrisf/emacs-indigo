@@ -244,17 +244,8 @@ Example:
        (indigo-with-stream-from-iterator (,stream-var ,iter-var)
          ,@body))))
 
-;; Auto-generate sequential binding versions for all stream macros
-(define-indigo-with* "atoms-stream")
-(define-indigo-with* "bonds-stream")
-(define-indigo-with* "neighbors-stream")
-(define-indigo-with* "components-stream")
-(define-indigo-with* "sssr-stream")
-(define-indigo-with* "rings-stream")
-(define-indigo-with* "subtrees-stream")
-(define-indigo-with* "stereocenters-stream")
-(define-indigo-with* "reactants-stream")
-(define-indigo-with* "products-stream")
+;; Sequential binding versions (indigo-with-*-stream*) are defined
+;; in indigo-with-star-defs.el
 
 (provide 'indigo-stream-iter)
 

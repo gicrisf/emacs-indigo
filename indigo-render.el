@@ -101,8 +101,8 @@ Example:
            (progn ,@body)
          (when ,var (indigo-free ,var))))))
 
-;; Auto-generate sequential binding version
-(define-indigo-with* "array")
+;; Sequential binding version (indigo-with-array*) is defined
+;; in indigo-with-star-defs.el
 
 ;; NOT YET IMPLEMENTED - C module functions missing
 ;; (defmacro indigo-with-file-writer (binding &rest body)

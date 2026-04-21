@@ -402,8 +402,8 @@ Example:
            (dolist (element --tracked-elements--)
              (when element (indigo-free element))))))))
 
-;; Auto-generate sequential binding version
-(define-indigo-with* "stream-from-iterator")
+;; Sequential binding version (indigo-with-stream-from-iterator*) is defined
+;; in indigo-with-star-defs.el
 
 (provide 'indigo-stream)
 
