@@ -1,8 +1,23 @@
 EMACS ?= emacs
 CC = gcc
 INDIGO_DIR = indigo-install
-EMACS_SRC_DIR = $(shell $(EMACS) -Q --batch --eval '(princ (expand-file-name "../src"))')
-CFLAGS = -fPIC -I$(EMACS_SRC_DIR) -I$(INDIGO_DIR)/include
+
+# Find emacs-module.h in common locations
+EMACS_MODULE_H := $(shell \
+  for dir in \
+    /usr/include \
+    /usr/local/include \
+    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"src\" data-directory))')" \
+    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../src\" data-directory))')" \
+    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../include\" invocation-directory))')"; do \
+    if [ -f "$$dir/emacs-module.h" ]; then echo "$$dir"; break; fi; \
+  done)
+
+ifeq ($(EMACS_MODULE_H),)
+  $(error emacs-module.h not found. Install Emacs development headers or build Emacs with --with-modules)
+endif
+
+CFLAGS = -fPIC -I$(EMACS_MODULE_H) -I$(INDIGO_DIR)/include
 LDFLAGS = -shared -L$(INDIGO_DIR)/lib -Wl,--start-group -lindigo-static -lindigo-renderer-static -Wl,--end-group -lstdc++ -lm -lz -ltinyxml -linchi
 
 all: build/indigo-module.so build/test-indigo
