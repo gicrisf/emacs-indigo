@@ -2,19 +2,24 @@ EMACS ?= emacs
 CC = gcc
 INDIGO_DIR = indigo-install
 
-# Find emacs-module.h in common locations
-EMACS_MODULE_H := $(shell \
-  for dir in \
-    /usr/include \
-    /usr/local/include \
-    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"src\" data-directory))')" \
-    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../src\" data-directory))')" \
-    "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../include\" invocation-directory))')"; do \
-    if [ -f "$$dir/emacs-module.h" ]; then echo "$$dir"; break; fi; \
-  done)
+# Find emacs-module.h
+# Use EMACS_MODULE_HEADER env var if set (e.g., from shell.nix), otherwise search common locations
+ifdef EMACS_MODULE_HEADER
+  EMACS_MODULE_H := $(EMACS_MODULE_HEADER)
+else
+  EMACS_MODULE_H := $(shell \
+    for dir in \
+      /usr/include \
+      /usr/local/include \
+      "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"src\" data-directory))')" \
+      "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../src\" data-directory))')" \
+      "$$($(EMACS) -Q --batch --eval '(princ (expand-file-name \"../include\" invocation-directory))')"; do \
+      if [ -f "$$dir/emacs-module.h" ]; then echo "$$dir"; break; fi; \
+    done)
+endif
 
 ifeq ($(EMACS_MODULE_H),)
-  $(error emacs-module.h not found. Install Emacs development headers or build Emacs with --with-modules)
+  $(error emacs-module.h not found. Use nix-shell or set EMACS_MODULE_HEADER, or install Emacs development headers)
 endif
 
 CFLAGS = -fPIC -I$(EMACS_MODULE_H) -I$(INDIGO_DIR)/include
