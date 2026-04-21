@@ -31,10 +31,6 @@
             mkdir -p $out/{include,lib}
             cp usr/include/indigo*.h $out/include/
             cp usr/lib/*.a $out/lib/
-
-            # Create symlinks expected by the linker
-            ln -s libindigo-static.a $out/lib/libindigo.a
-            ln -s libindigo-renderer-static.a $out/lib/libindigo-renderer.a
           '';
         };
 
@@ -108,7 +104,7 @@
               src/indigo-rendering-wrappers.c \
               -shared \
               -L${indigo}/lib \
-              -Wl,--start-group -lindigo -lindigo-renderer -Wl,--end-group \
+              -Wl,--start-group -lindigo-static -lindigo-renderer-static -Wl,--end-group \
               -lstdc++ -lm \
               -L${pkgs.zlib}/lib -lz \
               -L${pkgs.tinyxml}/lib -ltinyxml \

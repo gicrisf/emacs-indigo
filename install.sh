@@ -14,11 +14,11 @@ echo "Working directory: $(pwd)"
 echo ""
 
 echo "Step 1/3: Installing dependencies (zlib, TinyXML)..."
-./install-dependencies.sh
+bash ./install-dependencies.sh
 
 echo ""
 echo "Step 2/3: Installing Indigo library..."
-./install-indigo.sh
+bash ./install-indigo.sh
 
 echo ""
 echo "Step 3/3: Building Emacs module..."

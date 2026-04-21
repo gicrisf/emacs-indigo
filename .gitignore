@@ -16,6 +16,8 @@ test-indigo
 
 # Indigo installation
 indigo-install/
+deps-install/
+*.backup/
 
 # Eldev
 /.eldev
