@@ -219,7 +219,7 @@ to run `indigo-install'.  Returns non-nil if loading succeeded."
        ((file-directory-p indigo-dir)
         (message "Indigo module not found, building...")
         (let ((default-directory pkg-dir))
-          (if (zerop (call-process "make" nil "*indigo-build*" nil))
+          (if (zerop (call-process "make" nil "*indigo-build*" nil "module"))
               (indigo-load-module)  ; Retry after building
             (message "Failed to build indigo module. Check *indigo-build* buffer.")
             nil)))

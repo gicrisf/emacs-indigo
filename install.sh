@@ -22,7 +22,7 @@ bash ./install-indigo.sh
 
 echo ""
 echo "Step 3/3: Building Emacs module..."
-make
+make module
 
 echo ""
 echo "=== Installation complete! ==="
