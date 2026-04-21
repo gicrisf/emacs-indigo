@@ -3,7 +3,27 @@
 
 set -e  # Exit on any error
 
-echo "Installing Indigo cheminformatics library..."
+# Platform argument (required)
+PLATFORM="${1:-}"
+if [ -z "$PLATFORM" ]; then
+    echo "Usage: $0 <platform>"
+    echo "Available platforms: linux-x86_64"
+    exit 1
+fi
+
+# Validate platform
+case "$PLATFORM" in
+    linux-x86_64)
+        DEB_URL="http://archive.ubuntu.com/ubuntu/pool/universe/i/indigo/libindigo-dev_1.2.3-3.1build1_amd64.deb"
+        ;;
+    *)
+        echo "Error: Unsupported platform '$PLATFORM'"
+        echo "Available platforms: linux-x86_64"
+        exit 1
+        ;;
+esac
+
+echo "Installing Indigo cheminformatics library for $PLATFORM..."
 
 # Create directory structure
 mkdir -p indigo-install/{include,lib}
@@ -18,12 +38,9 @@ fi
 cd indigo-install
 
 # Try downloading Ubuntu .deb package
-echo "Trying Ubuntu .deb package extraction..."
+echo "Downloading from: $DEB_URL"
 mkdir -p downloads
 cd downloads
-
-# Latest .deb package URL (as of 2024-04-22)
-DEB_URL="http://archive.ubuntu.com/ubuntu/pool/universe/i/indigo/libindigo-dev_1.2.3-3.1build1_amd64.deb"
 
 if wget -q "$DEB_URL" 2>/dev/null || curl -s -O "$DEB_URL" 2>/dev/null; then
     DEB_FILE=$(basename "$DEB_URL")

@@ -64,6 +64,12 @@
   (file-name-directory (or load-file-name buffer-file-name))
   "Directory where emacs-indigo is installed.")
 
+(defvar indigo--available-platforms
+  '("linux-x86_64")
+  "List of platforms with pre-built Indigo binaries.
+Each entry corresponds to a supported platform for downloading
+pre-compiled Indigo libraries.")
+
 (defun indigo-install (&optional no-confirm)
   "Install the Indigo library and build the dynamic module.
 
@@ -72,13 +78,16 @@ This function runs the installation scripts to:
 2. Download and extract the Indigo cheminformatics library
 3. Compile the Emacs dynamic module
 
+Prompts for target platform from `indigo--available-platforms'.
 With prefix argument NO-CONFIRM, skip the confirmation prompt.
 
 After installation, use `indigo-doctor' to verify."
   (interactive "P")
   (let* ((pkg-dir indigo-install-directory)
          (install-script (expand-file-name "install.sh" pkg-dir))
-         (buffer-name "*indigo-install*"))
+         (buffer-name "*indigo-install*")
+         (platform (completing-read "Select platform: "
+                                    indigo--available-platforms nil t)))
     (unless (file-exists-p install-script)
       (error "Installation script not found at %s" install-script))
     (when (or no-confirm
@@ -87,12 +96,13 @@ After installation, use `indigo-doctor' to verify."
         (let ((inhibit-read-only t))
           (erase-buffer)
           (insert (format "=== Installing Emacs Indigo ===\n"))
+          (insert (format "Platform: %s\n" platform))
           (insert (format "Working directory: %s\n\n" pkg-dir))))
       (pop-to-buffer buffer-name)
       (let ((default-directory pkg-dir)
             (process-environment (cons "TERM=dumb" process-environment)))
         (set-process-sentinel
-         (start-process "indigo-install" buffer-name "bash" install-script)
+         (start-process "indigo-install" buffer-name "bash" install-script platform)
          (lambda (process event)
            (when (memq (process-status process) '(exit signal))
              (with-current-buffer (process-buffer process)
