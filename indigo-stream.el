@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -140,7 +139,7 @@ Example (map symbol extraction over atoms):
           (message \"First symbol: %s\" first-sym)  ; => \"C\"
           ;; Advance to rest
           (setq symbols (indigo-stream-rest symbols))
-          (message \"Second symbol: %s\" (indigo-stream-first symbols))))))  ; => \"C\"
+          (message \"Second symbol: %s\" (indigo-stream-first symbols))))))
 
 Example (collecting charges from atoms):
   (indigo-with-molecule (mol \"c1ccccc1\")  ; Benzene
@@ -407,5 +406,9 @@ Example:
 ;; in indigo-with-star-defs.el
 
 (provide 'indigo-stream)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
 
 ;;; indigo-stream.el ends here

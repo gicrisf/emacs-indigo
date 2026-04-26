@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -249,5 +248,9 @@ Example:
 ;; in indigo-with-star-defs.el
 
 (provide 'indigo-stream-iter)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
 
 ;;; indigo-stream-iter.el ends here

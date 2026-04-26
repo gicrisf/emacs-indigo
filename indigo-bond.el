@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -146,4 +145,9 @@ Example: (indigo-bond-stereo-code :up) => 5"
   (not (eq (indigo-bond-stereo bond) :none)))
 
 (provide 'indigo-bond)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
+
 ;;; indigo-bond.el ends here

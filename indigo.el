@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 ;; Version: 0.11.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: data tools extensions
@@ -103,7 +103,7 @@ After installation, use `indigo-doctor' to verify."
             (process-environment (cons "TERM=dumb" process-environment)))
         (set-process-sentinel
          (start-process "indigo-install" buffer-name "bash" install-script platform)
-         (lambda (process event)
+         (lambda (process _event)
            (when (memq (process-status process) '(exit signal))
              (with-current-buffer (process-buffer process)
                (let ((inhibit-read-only t))
