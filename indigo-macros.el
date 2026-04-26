@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This file is part of emacs-indigo.
 
@@ -63,5 +62,9 @@ Bindings are evaluated sequentially (like let*) with automatic cleanup."
               ,@body))))))
 
 (provide 'indigo-macros)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
 
 ;;; indigo-macros.el ends here

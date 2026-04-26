@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,8 +23,10 @@
 ;;
 ;; Atom Radical Functions:
 ;;
-;; - `indigo-radical' - Returns radical state as keyword (:none, :singlet, :doublet, :triplet)
-;; - `indigo-radical-electrons' - Returns number of electrons in radical center (integer)
+;; - `indigo-radical' - Returns radical state as keyword (:none, :singlet,
+;;   :doublet, :triplet)
+;; - `indigo-radical-electrons' - Returns number of electrons in radical
+;;   center (integer)
 ;;
 ;; The two functions are complementary:
 ;; - Radical state describes the spin configuration
@@ -107,4 +108,9 @@ Example: (indigo-radical-code :doublet) => 102"
   (eq (indigo-radical atom) :triplet))
 
 (provide 'indigo-atom)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
+
 ;;; indigo-atom.el ends here

@@ -2,8 +2,7 @@
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
 
-;; Author: Giovanni Crisalfi
-;; Package-Requires: ((emacs "25.1"))
+;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 
 ;; This file is part of emacs-indigo.
 
@@ -87,5 +86,9 @@
 (define-indigo-with* "products-iterator")
 
 (provide 'indigo-with-star-defs)
+
+;; Local variables:
+;; package-lint-main-file: "indigo.el"
+;; end:
 
 ;;; indigo-with-star-defs.el ends here
