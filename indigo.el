@@ -1,6 +1,7 @@
 ;;; indigo.el --- Emacs interface to the Indigo cheminformatics library -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 Giovanni Crisalfi
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Author: Giovanni Crisalfi <giovanni.crisalfi@protonmail.com>
 ;; Version: 0.11.1
